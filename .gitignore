@@ -3,3 +3,4 @@
 *.fif
 /pyrightconfig.json
 /.DS_Store
+/import_test.ipynb
