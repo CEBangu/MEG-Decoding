@@ -4,3 +4,4 @@
 /pyrightconfig.json
 /.DS_Store
 /import_test.ipynb
+/__pycache__

@@ -4,64 +4,28 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mne
 import os
+from functions import data_load, get_epo_pca
+
 # a note on the file names:
 # basically, the file names are subject, number between 2 and 4 (inclusive; I suppose trial), syllable, syllable label, and epo_a.fif
+# %% Cell 2
+dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
+subjects = ['BCOM_18_2']
+picks=['MEG 130', 'MEG 139','MEG 133','MEG 117','MEG 140','MEG 127','MEG 128','MEG 109','MEG 135','MEG 132','MEG 137',
+ 'MEG 131','MEG 129','MEG 118','MEG 134','MEG 136','MEG 141','MEG 116','MEG 114','MEG 115']
 
-picks=['MEG 130',
- 'MEG 139',
- 'MEG 133',
- 'MEG 117',
- 'MEG 140',
- 'MEG 127',
- 'MEG 128',
- 'MEG 109',
- 'MEG 135',
- 'MEG 132',
- 'MEG 137',
- 'MEG 131',
- 'MEG 129',
- 'MEG 118',
- 'MEG 134',
- 'MEG 136',
- 'MEG 141',
- 'MEG 116',
- 'MEG 114',
- 'MEG 115']
-
-epo_a = mne.read_epochs('BCOM_18_2_a_12-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable a whose label is 12
-epo_e = mne.read_epochs('BCOM_18_2_e_14-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable e whose label is 14
-epo_i = mne.read_epochs('BCOM_18_2_i_16-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable i whose label is 16
-epo_la = mne.read_epochs('BCOM_18_2_la_22-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable la whose label is 22
-epo_le = mne.read_epochs('BCOM_18_2_le_24-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable le whose label is 24
-epo_li = mne.read_epochs('BCOM_18_2_li_26-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable li whose label is 26
-epo_ma = mne.read_epochs('BCOM_18_2_ma_32-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable ma whose label is 32
-epo_me = mne.read_epochs('BCOM_18_2_me_34-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable me whose label is 34
-epo_mi = mne.read_epochs('BCOM_18_2_mi_36-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable mi whose label is 36
-epo_ra = mne.read_epochs('BCOM_18_2_ra_42-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_re = mne.read_epochs('BCOM_18_2_re_44-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_ri = mne.read_epochs('BCOM_18_2_ri_46-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_sa = mne.read_epochs('BCOM_18_2_sa_52-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_se = mne.read_epochs('BCOM_18_2_se_54-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_si = mne.read_epochs('BCOM_18_2_si_56-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_ta = mne.read_epochs('BCOM_18_2_ta_62-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_te = mne.read_epochs('BCOM_18_2_te_64-epo.fif', preload=True).pick(picks=picks).get_data()
-epo_ti = mne.read_epochs('BCOM_18_2_ti_66-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable ti whose label is 12
 
 
 #Let's put them all in a dictionary for easy access
+data_dict = data_load(dir, subjects, picks, avoid_overt=True)
 
-data_dict = {'a': epo_a, 'e': epo_e, 'i': epo_i,
-    'la': epo_la, 'le': epo_le, 'li': epo_li,
-    'ma': epo_ma, 'me': epo_me, 'mi': epo_mi,
-    'ra': epo_ra, 're': epo_re, 'ri': epo_ri,
-    'sa': epo_sa, 'se': epo_se, 'si': epo_si,
-    'ta': epo_ta, 'te': epo_te, 'ti': epo_ti}
+epo_a = mne.read_epochs('BCOM_18_2_a_12-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable a whose label is 12
+epo_ti = mne.read_epochs('BCOM_18_2_ti_66-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable ti whose label is 12
 
+assert epo_a.shape == data_dict['BCOM_18_2']['a_12'].shape # just to make sure that the data is the same as the data loaded from the function
 
 
-# %% Cell 2
 epo_a.shape # (17_epochs, 20_channels, 241_timespoints)
-
 # %% Cell 3
 # first epoch, in the first channel, over time.
 first_epo_a = epo_a[0, 0, :]
@@ -119,18 +83,18 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from mpl_toolkits.mplot3d import Axes3D
 
-def get_epo_pca(data_dict):
-    all_epochs = []
-    labels = []
-    i = 0
-    for key in data_dict:
-        for epoch, data in enumerate(data_dict[key]):
-            for t in data:
-                all_epochs.append(t)
-                labels.append(i)
-        i += 1
+# def get_epo_pca(data_dict):
+#     all_epochs = []
+#     labels = []
+#     i = 0
+#     for key in data_dict:
+#         for epoch, data in enumerate(data_dict[key]):
+#             for t in data:
+#                 all_epochs.append(t)
+#                 labels.append(i)
+#         i += 1
 
-    return np.array(all_epochs), np.array(labels)
+#     return np.array(all_epochs), np.array(labels)
 
 
 aepca, labels = get_epo_pca(data_dict)

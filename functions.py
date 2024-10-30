@@ -1,11 +1,16 @@
 import os
 import mne
+import numpy as np
+from typing import Tuple
+from numpy.typing import NDArray
 
 def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
     '''This function takes in a directory, the desired subjects, the desired channels, and a boolean of whether or not to avoid overt trials
     i.e., those coded with 3 digits.
     It returns a dictionary with the data of the desired subjects and trials, indexed first by subject, and then by syllable.'''
-    
+
+    #TODO: add a way to subset by trial - at the moment this needs to be specified in the subjects list
+
     #initialize the dictionary
     data_dict = {}
 
@@ -29,3 +34,43 @@ def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
 
 
     return data_dict
+
+
+def get_epo_pca(data_dict) -> Tuple[NDArray, NDArray]:
+    '''This function organizes the epochs to be used in PCA Analysis.
+    It takes in the data dictionary, and retunrs all of the epochs and their corresponding labels.
+    NB! This currently assumes there is only 1 subject in the dictionary'''
+
+    #TODO: This assumes only 1 subject at the moment! This is bad because we probably want to see the points
+    # over all subjects (or at least 2)
+    # maybe also add a way to subset by syllable?
+
+    all_epochs = [] # init list to store all epochs
+    labels = [] # init list to store all labels
+    i = 1 # init counter for labels
+
+    for subject in data_dict: #by subject
+        for syllable in (data_dict[subject]): #by syllable
+            for epoch in data_dict[subject][syllable]: #by epoch
+                all_epochs.append(epoch)
+                labels.append(i)
+            i += 1 #increment the label counter
+
+    return np.array(all_epochs), np.array(labels)
+
+
+
+# %% Cell 1 Testing Cell
+dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
+subjects = ['BCOM_18_2']
+picks=['MEG 130', 'MEG 139','MEG 133','MEG 117','MEG 140','MEG 127','MEG 128','MEG 109','MEG 135','MEG 132','MEG 137',
+ 'MEG 131','MEG 129','MEG 118','MEG 134','MEG 136','MEG 141','MEG 116','MEG 114','MEG 115']
+
+
+
+#Let's put them all in a dictionary for easy access
+data_dict = data_load(dir, subjects, picks, avoid_overt=True)
+
+aepca, labels = get_epo_pca(data_dict)
+
+aepca
