@@ -83,20 +83,6 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from mpl_toolkits.mplot3d import Axes3D
 
-# def get_epo_pca(data_dict):
-#     all_epochs = []
-#     labels = []
-#     i = 0
-#     for key in data_dict:
-#         for epoch, data in enumerate(data_dict[key]):
-#             for t in data:
-#                 all_epochs.append(t)
-#                 labels.append(i)
-#         i += 1
-
-#     return np.array(all_epochs), np.array(labels)
-
-
 aepca, labels = get_epo_pca(data_dict)
 
 # Standardize data

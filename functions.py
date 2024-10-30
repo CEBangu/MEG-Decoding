@@ -73,4 +73,4 @@ data_dict = data_load(dir, subjects, picks, avoid_overt=True)
 
 aepca, labels = get_epo_pca(data_dict)
 
-aepca
+print(aepca.shape)
