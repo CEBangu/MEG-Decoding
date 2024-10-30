@@ -1,10 +1,17 @@
+#README:
+# This file is mostly just to play around with the data, to get a feel for it. The real decoding work will be done in a different file. 
+# Also, this probably should be a jupyter notebook. However, it was originally done in the Zed editor with REPL since Zed does not have Jupyter support at this time (Oct 30, 2024),
+# and I wanted to practice using Zed since it seems like a promising project. 
+
 # %% Cell 1
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import mne
 import os
-from functions import data_load, get_epo_pca
+from functions import data_load, get_epo_pca, sensor_correlations
+
+
 
 # a note on the file names:
 # basically, the file names are subject, number between 2 and 4 (inclusive; I suppose trial), syllable, syllable label, and epo_a.fif
@@ -120,9 +127,71 @@ plt.show()
 
 
 # %% Cell 10
+#Let's see if there are any interesting correlational patterns in the data, between sensors for example.
 
+a = data_dict['BCOM_18_2']['a_12'] # (17_epochs, 20_channels, 241_timespoints)
 
+a_trial = a[3] # (20_channels, 241_timespoints), the first epoch of a
 
+# plt.matshow(a_1, aspect='auto') #sensors are the rows, time is the columns
 
-# %% Cell 11
+# plt.matshow(a_1[0:2], aspect='auto') # the first 2 sensors over time. 
+
+# Compute the pairwise correlation between each row of the third epoch of a
+correlation_matrix = np.corrcoef(a_trial, rowvar=True)
+
+# Plot the correlation matrix
+plt.matshow(correlation_matrix, aspect='auto')
+
+plt.xlabel('Sensor Index')
+plt.ylabel('Sensor Index')
+plt.title('Pairwise Correlation between Sensors')
+plt.colorbar()
+plt.show()
+
+# actually it might be nice to know which sensors are the most highly correlated accross in each epoch.
+
+# Find the maximum correlation value less than 1
+max_corr_value = np.max(np.abs(correlation_matrix)[np.abs(correlation_matrix) < 0.99]) # avoid the diagonal
+
+# Find the indices of the maximum correlation value
+max_corr_indices = np.where(np.abs(correlation_matrix) == max_corr_value)
+
+print(f"Maximum correlation value less than 1: {max_corr_value}")
+print(f"Indices of maximum correlation: {max_corr_indices}")
+
+# %%Cell 11
+
+sensor_correlations(a)
+
+# i = 1
+# correlations_a = pd.DataFrame({'Epoch': [], 'Max Correlation Value': [], 'Max Correlation Indices': []})
+# for trial in a:
+#     correlation_matrix = np.corrcoef(trial, rowvar=True)
+#     max_corr_value = np.max(np.abs(correlation_matrix)[np.abs(correlation_matrix) < 0.99])
+#     max_corr_indices = np.where(np.abs(correlation_matrix) == max_corr_value)
+    
+#     # Ensure indices are symmetrical
+#     max_corr_indices = list(zip(*max_corr_indices))
+#     max_corr_indices = list(set(tuple(sorted(pair)) for pair in max_corr_indices))
+    
+#     correlations_a = pd.concat([correlations_a, pd.DataFrame({'Epoch': i, 'Max Correlation Value': max_corr_value, 'Max Correlation Indices': max_corr_indices})], ignore_index=True)
+
+#     i += 1
+
+# correlations_a.sort_values(by='Max Correlation Value', ascending=False)
+# %% Cell 12
+# Compute the pairwise covariance between each row of a_1
+covariance_matrix = np.cov(a_trial, rowvar=True)
+
+# Plot the covariance matrix
+plt.matshow(covariance_matrix, aspect='auto')
+
+plt.xlabel('Sensor Index')
+plt.ylabel('Sensor Index')
+plt.title('Pairwise Covariance between Sensors')
+plt.colorbar()
+plt.show()
+
+# %% Cell 13
 ## Try Vision Transformer - maybe pretrained one though

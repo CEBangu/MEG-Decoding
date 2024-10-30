@@ -1,8 +1,10 @@
 import os
 import mne
 import numpy as np
+import pandas as pd
 from typing import Tuple
 from numpy.typing import NDArray
+
 
 def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
     '''This function takes in a directory, the desired subjects, the desired channels, and a boolean of whether or not to avoid overt trials
@@ -59,18 +61,39 @@ def get_epo_pca(data_dict) -> Tuple[NDArray, NDArray]:
     return np.array(all_epochs), np.array(labels)
 
 
+def sensor_correlations(syllable_epochs: NDArray): 
+    '''This function takes in the epochs for a single syllable and returns the correlation matrix between the sensors during
+    each epoch'''
+    
+    i = 1
+    correlations = pd.DataFrame({'Epoch': [], 'Max Correlation Value': [], 'Max Correlation Indices': []})
+    for trial in syllable_epochs:
+        correlation_matrix = np.corrcoef(trial, rowvar=True)
+        max_corr_value = np.max(np.abs(correlation_matrix)[np.abs(correlation_matrix) < 0.99])
+        max_corr_indices = np.where(np.abs(correlation_matrix) == max_corr_value)
+    
+        # Ensure indices are symmetrical
+        max_corr_indices = list(zip(*max_corr_indices))
+        max_corr_indices = list(set(tuple(sorted(pair)) for pair in max_corr_indices))
+    
+        correlations = pd.concat([correlations, pd.DataFrame({'Epoch': i, 'Max Correlation Value': max_corr_value, 'Max Correlation Indices': max_corr_indices})], ignore_index=True)
+
+        i += 1
+
+    return correlations
+
 
 # %% Cell 1 Testing Cell
-dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
-subjects = ['BCOM_18_2']
-picks=['MEG 130', 'MEG 139','MEG 133','MEG 117','MEG 140','MEG 127','MEG 128','MEG 109','MEG 135','MEG 132','MEG 137',
- 'MEG 131','MEG 129','MEG 118','MEG 134','MEG 136','MEG 141','MEG 116','MEG 114','MEG 115']
+# dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
+# subjects = ['BCOM_18_2']
+# picks=['MEG 130', 'MEG 139','MEG 133','MEG 117','MEG 140','MEG 127','MEG 128','MEG 109','MEG 135','MEG 132','MEG 137',
+#  'MEG 131','MEG 129','MEG 118','MEG 134','MEG 136','MEG 141','MEG 116','MEG 114','MEG 115']
 
 
 
-#Let's put them all in a dictionary for easy access
-data_dict = data_load(dir, subjects, picks, avoid_overt=True)
+# #Let's put them all in a dictionary for easy access
+# data_dict = data_load(dir, subjects, picks, avoid_overt=True)
 
-aepca, labels = get_epo_pca(data_dict)
+# aepca, labels = get_epo_pca(data_dict)
 
-print(aepca.shape)
+# print(aepca.shape)
