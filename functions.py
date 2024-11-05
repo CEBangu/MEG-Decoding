@@ -82,6 +82,24 @@ def sensor_correlations(syllable_epochs: NDArray):
 
     return correlations
 
+def get_syllable_counts(data_dict):
+    '''This function takes in the data dictionary and returns a dictionary with the counts of each syllable for each subject'''
+    syllable_counts = {}
+    for subject in data_dict:
+        syllable_counts[subject] = {}
+        for syllable in data_dict[subject]:
+            syllable_counts[subject][syllable] = len(data_dict[subject][syllable])
+
+    return syllable_counts
+
+def get_max_length(syllable_count):
+    '''This function takes the output of get_syllable_counts and returns the maximum syllable length per subject'''
+    max_length = {}
+    for subjects in syllable_count:
+        max_length[subjects] = max(syllable_count[subjects].values())
+
+    return max_length
+
 
 # %% Cell 1 Testing Cell
 # dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
