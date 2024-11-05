@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 from numpy.typing import NDArray
+import torch
 
 
 def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
@@ -101,6 +102,56 @@ def get_max_length(syllable_count):
     return max_length
 
 
+def padding(data_dict, rows=20, columns=241):
+    '''This function pads the data in order to assemble it into a tensor in case there are different numbers of epochs per syllable'''
+    for subject in data_dict:
+        max_length = get_max_length(get_syllable_counts(data_dict))
+
+        for syllable in data_dict[subject]:
+
+            if len(data_dict[subject][syllable]) < max_length[subject]: # if the length is smaller than the max length
+
+                padding = np.zeros([max_length[subject] - len(data_dict[subject][syllable]), rows, columns]) # create a padding array
+                data_dict[subject][syllable] = np.concatenate((data_dict[subject][syllable], padding)) # concatenate the padding to the original array
+    return data_dict
+
+def concat_padded(padded_data_dict):
+    '''This function takes in the padded data dictionary and returns a tensor'''
+    concatenated = np.zeros((0, 20, 241)) # create an empty array to concatenate the data to
+    for subject in padded_data_dict: # for each subject
+        for syllable in padded_data_dict[subject]: # for each syllable
+            concatenated = np.concatenate((concatenated, padded_data_dict[subject][syllable]), axis=0)
+    
+    return concatenated
+
+def remove_padding(concatenated, rows=20, columns=241):
+    '''This function takes in the concatenated padded data and removes the padding'''
+    padding_array = np.zeros([rows, columns]) #create a padding array to compare to
+
+    index_list = []
+    i = -1 #if you start at 0 you will miss the first index 
+
+    for slice in concatenated:
+        i += 1
+        if np.array_equal(slice, padding_array):
+            index_list.append(i)
+
+    concatenated = np.delete(concatenated, index_list, axis=0)
+
+    return concatenated
+
+
+def data_to_tensor(data_dict, rows=20, columns=241):
+    '''This function combines all of the individual steps outlined above, and converts the data into a 3d tensor'''
+
+    device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
+
+    padded = padding(data_dict)
+    concatenated = concat_padded(padded)
+    unpadded = remove_padding(concatenated, rows, columns)
+    tensor = torch.tensor(unpadded, dtype=torch.float32, device=device)
+
+    return tensor
 # %% Cell 1 Testing Cell
 # dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
 # subjects = ['BCOM_18_2']
