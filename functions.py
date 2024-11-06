@@ -5,6 +5,7 @@ import pandas as pd
 from typing import Tuple
 from numpy.typing import NDArray
 import torch
+import copy
 
 
 def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
@@ -102,18 +103,19 @@ def get_max_length(syllable_count):
     return max_length
 
 
-def padding(data_dict, rows=20, columns=241):
+def padding(data_dictionary, rows=20, columns=241):
     '''This function pads the data in order to assemble it into a tensor in case there are different numbers of epochs per syllable'''
-    for subject in data_dict:
-        max_length = get_max_length(get_syllable_counts(data_dict))
 
-        for syllable in data_dict[subject]:
+    for subject in data_dictionary:
+        max_length = get_max_length(get_syllable_counts(data_dictionary))
 
-            if len(data_dict[subject][syllable]) < max_length[subject]: # if the length is smaller than the max length
+        for syllable in data_dictionary[subject]:
 
-                padding = np.zeros([max_length[subject] - len(data_dict[subject][syllable]), rows, columns]) # create a padding array
-                data_dict[subject][syllable] = np.concatenate((data_dict[subject][syllable], padding)) # concatenate the padding to the original array
-    return data_dict
+            if len(data_dictionary[subject][syllable]) < max_length[subject]: # if the length is smaller than the max length
+
+                padding = np.zeros([max_length[subject] - len(data_dictionary[subject][syllable]), rows, columns]) # create a padding array
+                data_dictionary[subject][syllable] = np.concatenate((data_dictionary[subject][syllable], padding)) # concatenate the padding to the original array
+    return data_dictionary
 
 def concat_padded(padded_data_dict):
     '''This function takes in the padded data dictionary and returns a tensor'''
@@ -140,18 +142,36 @@ def remove_padding(concatenated, rows=20, columns=241):
 
     return concatenated
 
+def syllable_indexes(data_dictionary):
+    '''When the data_dictionary gets turned into a tensor, which slices belong to which syllable get lost.
+    This function solves this problem by returning an array with the indexes of the syllables'''
 
-def data_to_tensor(data_dict, rows=20, columns=241):
+    syllable_indexes = []
+    i = 0
+    counts = get_syllable_counts(data_dictionary)
+    for subject in counts:
+        for syllable in counts[subject]:
+            syllable_indexes.extend([i] * counts[subject][syllable])
+            i += 1
+    
+    return syllable_indexes
+
+
+def data_to_tensor(data_dictionary, rows=20, columns=241):
     '''This function combines all of the individual steps outlined above, and converts the data into a 3d tensor'''
 
     device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
 
-    padded = padding(data_dict)
+    # Create a deep copy of the data_dictionary to avoid altering the original object
+    data_dictionary_copy = copy.deepcopy(data_dictionary)
+
+    syllable_idxs = syllable_indexes(data_dictionary_copy)
+    padded = padding(data_dictionary_copy)
     concatenated = concat_padded(padded)
     unpadded = remove_padding(concatenated, rows, columns)
     tensor = torch.tensor(unpadded, dtype=torch.float32, device=device)
 
-    return tensor
+    return tensor, syllable_idxs
 # %% Cell 1 Testing Cell
 # dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
 # subjects = ['BCOM_18_2']
