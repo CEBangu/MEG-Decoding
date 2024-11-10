@@ -17,7 +17,7 @@ from functions import data_load, get_epo_pca, sensor_correlations
 # basically, the file names are subject, number between 2 and 4 (inclusive; I suppose trial), syllable, syllable label, and epo_a.fif
 # %% Cell 2
 dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
-dir2 = '/Users/ciprianbangu/Cogmaster/M2 Internship/BCI code'
+dir2 = '/Users/ciprianbangu/Cogmaster/M2 Internship/BCI code/Data_Sample'
 subjects = ['BCOM_18_2']
 picks=['MEG 130', 'MEG 139','MEG 133','MEG 117','MEG 140','MEG 127','MEG 128','MEG 109','MEG 135','MEG 132','MEG 137',
  'MEG 131','MEG 129','MEG 118','MEG 134','MEG 136','MEG 141','MEG 116','MEG 114','MEG 115']
@@ -25,20 +25,23 @@ picks=['MEG 130', 'MEG 139','MEG 133','MEG 117','MEG 140','MEG 127','MEG 128','M
 
 
 #Let's put them all in a dictionary for easy access
-data_dict = data_load(dir2, subjects, picks, avoid_overt=True)
+data_dict = data_load(dir, subjects, picks, avoid_overt=True)
+epo_a_raw = mne.read_epochs('BCOM_18_2_a_12-epo.fif', preload=True).pick(picks=picks)
 
 epo_a = mne.read_epochs('BCOM_18_2_a_12-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable a whose label is 12
 epo_ti = mne.read_epochs('BCOM_18_2_ti_66-epo.fif', preload=True).pick(picks=picks).get_data() #so in this case, this is subect 1, trial 2, syllable ti whose label is 12
 
 assert epo_a.shape == data_dict['BCOM_18_2']['a_12'].shape # just to make sure that the data is the same as the data loaded from the function
 
-
+epo_a_raw
 epo_a.shape # (17_epochs, 20_channels, 241_timespoints)
 # %% Cell 3
 # first epoch, in the first channel, over time.
 first_epo_a = epo_a[0, 0, :]
 first_epo_a.shape
 plt.plot(first_epo_a)
+
+
 
 # %% Cell 4
 # all channels in the first epoch, over time

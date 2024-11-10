@@ -8,7 +8,7 @@ import torch
 import copy
 
 
-def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
+def data_load(dir, subjects, picks, avoid_reading=True) -> dict:
     '''This function takes in a directory, the desired subjects, the desired channels, and a boolean of whether or not to avoid overt trials
     i.e., those coded with 3 digits.
     It returns a dictionary with the data of the desired subjects and trials, indexed first by subject, and then by syllable.'''
@@ -28,7 +28,7 @@ def data_load(dir, subjects, picks, avoid_overt=True) -> dict:
                 if file.startswith(subject):
                     epo_name = file[10:-8]
 
-                    if (avoid_overt == True) and (sum(c.isdigit() for c in epo_name) >= 3): #avoid the ones with 3 digits in them because those are the out-loud trials I believe - 
+                    if (avoid_reading == True) and (sum(c.isdigit() for c in epo_name) < 3): #avoid the ones with 3 digits in them because those are the out-loud trials I believe - 
                                                                                             #will have to double check this but good to know if it works anyways
                         continue
             
@@ -117,9 +117,9 @@ def padding(data_dictionary, rows=20, columns=241):
                 data_dictionary[subject][syllable] = np.concatenate((data_dictionary[subject][syllable], padding)) # concatenate the padding to the original array
     return data_dictionary
 
-def concat_padded(padded_data_dict):
+def concat_padded(padded_data_dict, rows=20, columns=241):
     '''This function takes in the padded data dictionary and returns a tensor'''
-    concatenated = np.zeros((0, 20, 241)) # create an empty array to concatenate the data to
+    concatenated = np.zeros((0, rows, columns)) # create an empty array to concatenate the data to
     for subject in padded_data_dict: # for each subject
         for syllable in padded_data_dict[subject]: # for each syllable
             concatenated = np.concatenate((concatenated, padded_data_dict[subject][syllable]), axis=0)
@@ -166,8 +166,8 @@ def data_to_tensor(data_dictionary, rows=20, columns=241):
     data_dictionary_copy = copy.deepcopy(data_dictionary)
 
     syllable_idxs = syllable_indexes(data_dictionary_copy)
-    padded = padding(data_dictionary_copy)
-    concatenated = concat_padded(padded)
+    padded = padding(data_dictionary_copy, rows, columns)
+    concatenated = concat_padded(padded, rows, columns)
     unpadded = remove_padding(concatenated, rows, columns)
     tensor = torch.tensor(unpadded, dtype=torch.float32, device=device)
 
