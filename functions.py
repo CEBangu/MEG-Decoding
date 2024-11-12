@@ -28,8 +28,7 @@ def data_load(dir, subjects, picks, avoid_reading=True) -> dict:
                 if file.startswith(subject):
                     epo_name = file[10:-8]
 
-                    if (avoid_reading == True) and (sum(c.isdigit() for c in epo_name) < 3): #avoid the ones with 3 digits in them because those are the out-loud trials I believe - 
-                                                                                            #will have to double check this but good to know if it works anyways
+                    if (avoid_reading == True) and (sum(c.isdigit() for c in epo_name) < 3): #segments where the subject is actually just reading rather than imagining have 2 digits
                         continue
             
                     file = os.path.join(dir, file)
