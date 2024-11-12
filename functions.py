@@ -192,6 +192,17 @@ def data_to_tensor(data_dictionary, rows=None, columns=None):
     tensor = torch.tensor(unpadded, dtype=torch.float32, device=device)
 
     return tensor, syllable_idxs
+
+def slicer(data_dictionary, time_start, time_end):
+    '''This function slices the data into the desired time interval'''
+    sliced_data = {}
+
+    for subject in data_dictionary:
+        sliced_data[subject] = {}
+        for syllable in data_dictionary[subject]:
+            sliced_data[subject][syllable] = data_dictionary[subject][syllable][:, :, time_start:time_end]
+
+    return sliced_data
 # %% Cell 1 Testing Cell
 # dir = '/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/COVERT'
 # subjects = ['BCOM_18_2']
