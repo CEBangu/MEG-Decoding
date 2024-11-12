@@ -103,8 +103,12 @@ def get_max_length(syllable_count):
     return max_length
 
 
-def padding(data_dictionary, rows=20, columns=241):
+def padding(data_dictionary, rows=None, columns=None):
     '''This function pads the data in order to assemble it into a tensor in case there are different numbers of epochs per syllable'''
+    if rows is None:
+        rows = list(list(data_dictionary.values())[0].values())[0][0].shape[0]
+    if columns is None:
+        columns = list(list(data_dictionary.values())[0].values())[0][0].shape[1]
 
     for subject in data_dictionary:
         max_length = get_max_length(get_syllable_counts(data_dictionary))
@@ -117,8 +121,13 @@ def padding(data_dictionary, rows=20, columns=241):
                 data_dictionary[subject][syllable] = np.concatenate((data_dictionary[subject][syllable], padding)) # concatenate the padding to the original array
     return data_dictionary
 
-def concat_padded(padded_data_dict, rows=20, columns=241):
+def concat_padded(padded_data_dict, rows=None, columns=None):
     '''This function takes in the padded data dictionary and returns a tensor'''
+    if rows is None:
+        rows = list(list(padded_data_dict.values())[0].values())[0][0].shape[0]
+    if columns is None:
+        columns = list(list(padded_data_dict.values())[0].values())[0][0].shape[1]
+
     concatenated = np.zeros((0, rows, columns)) # create an empty array to concatenate the data to
     for subject in padded_data_dict: # for each subject
         for syllable in padded_data_dict[subject]: # for each syllable
@@ -126,8 +135,14 @@ def concat_padded(padded_data_dict, rows=20, columns=241):
     
     return concatenated
 
-def remove_padding(concatenated, rows=20, columns=241):
+def remove_padding(concatenated, rows=None, columns=None):
     '''This function takes in the concatenated padded data and removes the padding'''
+
+    if rows is None:
+        rows = list(list(concatenated.values())[0].values())[0][0].shape[0]
+    if columns is None:
+        columns = list(list(concatenated.values())[0].values())[0][0].shape[1]
+    
     padding_array = np.zeros([rows, columns]) #create a padding array to compare to
 
     index_list = []
@@ -157,8 +172,13 @@ def syllable_indexes(data_dictionary):
     return syllable_indexes
 
 
-def data_to_tensor(data_dictionary, rows=20, columns=241):
+def data_to_tensor(data_dictionary, rows=None, columns=None):
     '''This function combines all of the individual steps outlined above, and converts the data into a 3d tensor'''
+
+    if rows is None:
+        rows = list(list(data_dictionary.values())[0].values())[0][0].shape[0]
+    if columns is None:
+        columns = list(list(data_dictionary.values())[0].values())[0][0].shape[1] 
 
     device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
 
