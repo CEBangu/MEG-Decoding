@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 import torch
 import copy
 
+#TODO: make this into a class
 
 def data_load(dir, subjects, picks, avoid_reading=True) -> dict:
     '''This function takes in a directory, the desired subjects, the desired channels, and a boolean of whether or not to avoid overt trials

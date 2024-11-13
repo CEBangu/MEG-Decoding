@@ -3,6 +3,8 @@
 # Also, this probably should be a jupyter notebook. However, it was originally done in the Zed editor with REPL since Zed does not have Jupyter support at this time (Oct 30, 2024),
 # and I wanted to practice using Zed since it seems like a promising project. 
 
+#TODO: Jupyter notebook for this because this is just ridiculous
+
 # %% Cell 1
 import numpy as np
 import pandas as pd
