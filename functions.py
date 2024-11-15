@@ -7,9 +7,36 @@ from numpy.typing import NDArray
 import torch
 import copy
 
+
+# class BcomMEG():
+#     def __init__(self, dir, subjects, picks, avoid_reading=True):
+#         self.dir = dir
+#         self.subjects = subjects
+#         self.picks = picks
+#         self.avoid_reading = avoid_reading
+        
+#         #hardcode
+#         self.possible_syllables = [
+
+#         ]
+        
+#         #get all the data
+#         self.data = load_data(self.dir, self.subjects, self.picks, self.avoid_reading)
+
+#         self.label_to_in_map = {label: index for index, label in enumerate(possible_syllables)}
+#         self.int_to_label_map = {index: label for index, label in enumerate(possible_syllables)}
+
+
+        
+
+
+
+
+
+
 #TODO: make this into a class
 
-def data_load(dir, subjects, picks=None, avoid_reading=True) -> dict:
+def load_data(dir, subjects, picks=None, avoid_reading=True) -> dict:
     '''This function takes in a directory, the desired subjects, the desired channels, and a boolean of whether or not to avoid overt trials
     i.e., those coded with 3 digits.
     It returns a dictionary with the data of the desired subjects and trials, indexed first by subject, and then by syllable.'''
