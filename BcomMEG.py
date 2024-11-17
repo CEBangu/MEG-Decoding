@@ -9,14 +9,21 @@ import copy
 
 
 class BcomMEG():
-    def __init__(self, dir, subjects, picks=None, avoid_reading=True):
+    def __init__(self, subjects, dir=None, data=None, picks=None, avoid_reading=True):
         self.dir = dir
         self.subjects = subjects
         self.picks = picks
         self.avoid_reading = avoid_reading
-        self.data = self.load_data()
+
+        if data:
+            self.data = data
+        else:
+            self.data = self.load_data()
 
     def load_data(self) -> dict:
+        if not self.dir:
+            raise ValueError("Directory not specified. Please provide a valid directory path.")
+        
         data_dict = {}
         for subject in self.subjects:
             if subject not in data_dict:
@@ -143,11 +150,9 @@ class BcomMEG():
             for syllable in self.data[subject]:
                 sliced_data[subject][syllable] = self.data[subject][syllable][:, :, time_start:time_end]
         
-        new_instance = copy.deepcopy(self)
-        new_instance.data = sliced_data
-        return new_instance
+        return BcomMEG(subjects=self.subjects, data=sliced_data)
     
-    def get_trial(self, trial_name:str):
-        new_instance = copy.deepcopy(self)
-        new_instance.data = self.data[trial_name]
-        return new_instance
+    def get_trial(self, trial_names:list):
+        data = {trial: self.data[trial] for trial in trial_names}
+        subjects = list(data.keys())
+        return BcomMEG(subjects=subjects, data=data)
