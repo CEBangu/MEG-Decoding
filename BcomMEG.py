@@ -126,7 +126,7 @@ class BcomMEG():
                 i += 1
         return syllable_indexes
 
-    def data_to_tensor(self, rows=None, columns=None): #TODO: Just double check this works properly
+    def data_to_tensor(self, rows=None, columns=None): #TODO: is it smart that this returns a torch tensor?
         if rows is None:
             rows = list(list(self.data.values())[0].values())[0][0].shape[0]
         if columns is None:
