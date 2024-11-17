@@ -11,7 +11,13 @@ class MEGDataset_Conv(Dataset):
         self.data, _  = self.data_dict.data_to_tensor() #NB! this is already a torch tensor, and also returns indexes
                                                   # which we want to avoid (the '_')
 
-    def get_label_map(self, map_name):
+    def get_label_map(self, map_name)->dict:
+        
+        '''This method is used by the class to populate its label_map attribute. 
+        If a dictionary is passed as the map_name, then this method returns that dictionary.
+        If a string is passed, then this method searches the directory for the label_maps.json, and recovers the corresponding
+        label map if it is found in the file'''
+
         if type(map_name) == dict:
             label_map = map_name
         else:
@@ -26,7 +32,9 @@ class MEGDataset_Conv(Dataset):
         return label_map
     
 
-    def get_labels(self, data_dict, label_map):
+    def get_labels(self, data_dict, label_map) -> list:
+        '''This methodis used by the class to populate its labels attribute.
+        It returns a list which matches the data at each index to its label'''
         labels = []
         syllable_counts = data_dict.get_syllable_counts()
         for subject in syllable_counts:

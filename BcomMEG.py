@@ -21,6 +21,8 @@ class BcomMEG():
             self.data = self.load_data()
 
     def load_data(self) -> dict:
+        '''This method populates the class's data attribute if data was not already passed to it.
+        It searches the directory for the subjects and fetches and loads the epochs'''
         if not self.dir:
             raise ValueError("Directory not specified. Please provide a valid directory path.")
         
@@ -64,6 +66,7 @@ class BcomMEG():
         return correlations
 
     def get_syllable_counts(self):
+        '''This method counts the number of epochs for each syllable in the object'''
         syllable_counts = {}
         for subject in self.data:
             syllable_counts[subject] = {}
@@ -72,6 +75,7 @@ class BcomMEG():
         return syllable_counts
 
     def get_max_length(self, syllable_count):
+        '''This method gets the maximum number of epochs in the object'''
         max_length = {}
         for subjects in syllable_count:
             max_length[subjects] = max(syllable_count[subjects].values())
@@ -117,6 +121,7 @@ class BcomMEG():
         return concatenated
 
     def syllable_indexes(self):
+        '''This method returns a list that corresponds to each syllables index if data_dict were an array'''
         syllable_indexes = []
         i = 0
         counts = self.get_syllable_counts()
@@ -127,6 +132,7 @@ class BcomMEG():
         return syllable_indexes
 
     def data_to_tensor(self, rows=None, columns=None): #TODO: is it smart that this returns a torch tensor?
+        '''This method convets the object into a torch.tensor'''
         if rows is None:
             rows = list(list(self.data.values())[0].values())[0][0].shape[0]
         if columns is None:
@@ -144,6 +150,7 @@ class BcomMEG():
         return tensor, syllable_idxs
 
     def slicer(self, time_start, time_end):
+        '''This method returns a new instance of the object that has every epoch sliced time-wise per the values in the arguments'''
         sliced_data = {}
         for subject in self.data:
             sliced_data[subject] = {}
@@ -152,7 +159,14 @@ class BcomMEG():
         
         return BcomMEG(subjects=self.subjects, data=sliced_data)
     
+    def upscale(self, order_of_magnitude:int):
+        '''This method modifies the data.data attribute in the object by multiplying each value by the specified order of magnitude'''
+        for subject in self.data:
+            for syllable in self.data[subject]:
+                self.data[subject][syllable] *= 10 ** order_of_magnitude
+
     def get_trial(self, trial_names:list):
+        '''This method returns a new instance of the object subsetted by the specified trial_names'''
         data = {trial: self.data[trial] for trial in trial_names}
         subjects = list(data.keys())
         return BcomMEG(subjects=subjects, data=data)
