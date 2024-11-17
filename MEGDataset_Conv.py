@@ -8,7 +8,7 @@ class MEGDataset_Conv(Dataset):
         self.label_map = self.get_label_map(label_map)
         self.labels = self.get_labels(self.data_dict, self.label_map)
 
-        self.data, _  = BcomMEG_object.data_to_tensor() #NB! this is already a torch tensor, and also returns indexes
+        self.data, _  = self.data_dict.data_to_tensor() #NB! this is already a torch tensor, and also returns indexes
                                                   # which we want to avoid (the '_')
 
     def get_label_map(self, map_name):
