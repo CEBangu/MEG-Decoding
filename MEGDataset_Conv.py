@@ -33,7 +33,7 @@ class MEGDataset_Conv(Dataset):
     
 
     def get_labels(self, data_dict, label_map) -> list:
-        '''This methodis used by the class to populate its labels attribute.
+        '''This method is used by the class to populate its labels attribute.
         It returns a list which matches the data at each index to its label'''
         labels = []
         syllable_counts = data_dict.get_syllable_counts()
