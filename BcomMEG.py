@@ -131,14 +131,13 @@ class BcomMEG():
                 i += 1
         return syllable_indexes
 
-    def data_to_tensor(self, rows=None, columns=None): #TODO: is it smart that this returns a torch tensor?
+    def data_to_tensor(self, rows=None, columns=None): #TODO: it was not smart to return a torch tensor
         '''This method convets the object into a torch.tensor'''
         if rows is None:
             rows = list(list(self.data.values())[0].values())[0][0].shape[0]
         if columns is None:
             columns = list(list(self.data.values())[0].values())[0][0].shape[1]
 
-        device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
         # data_dictionary_copy = copy.deepcopy(self.data)
         syllable_idxs = self.syllable_indexes()
 
@@ -146,8 +145,7 @@ class BcomMEG():
 
         concatenated = self.concat_padded(rows, columns)
         unpadded = self.remove_padding(concatenated, rows, columns)
-        tensor = torch.tensor(unpadded, dtype=torch.float32, device=device)
-        return tensor, syllable_idxs
+        return unpadded, syllable_idxs
 
     def slicer(self, time_start, time_end):
         '''This method returns a new instance of the object that has every epoch sliced time-wise per the values in the arguments'''

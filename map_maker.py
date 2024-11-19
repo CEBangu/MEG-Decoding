@@ -25,12 +25,26 @@ binary_class_label_map = {
     're_44': 1,'ri_46': 1,'sa_52': 1,'se_54': 1,'si_56': 1,'ta_62': 1,'te_64': 1,'ti_66': 1
 }
 
+vowel_class_covert_label_map ={
+    'a_112': 0, 'ra_142': 0, 'sa_152': 0, 'ma_132': 0, 'la_122': 0, 'ta_162': 0,
+    'ti_166': 1, 'li_126': 1, 'i_116': 1, 'ri_146': 1, 'si_156': 1, 'mi_136': 1,
+    'e_114': 2, 'se_154': 2, 'me_134': 2, 'le_124': 2, 're_144': 2, 'te_164': 2
+    }
+    
+    
+    
+ 
+ 
+
+ 
+
 # Combine all maps into one dictionary
 all_maps = {
     "multi_class_label_map": multi_class_label_map,
     "multi_class_covert": multi_class_covert,
     "multi_class_overt": multi_class_overt,
-    "binary_class_label_map": binary_class_label_map
+    "binary_class_label_map": binary_class_label_map,
+    "vowel_class_label_map": vowel_class_covert_label_map
 }
 
 # Write the combined dictionary to a single JSON file

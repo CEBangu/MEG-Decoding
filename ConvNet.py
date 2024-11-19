@@ -4,18 +4,18 @@ class ConvNet(nn.Module):
         super(ConvNet, self).__init__()
         #Conv blocks
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, padding=1) #(16, 247, 241)
-        self.bn1 = nn.BatchNorm2d(16)
-        self.relu1 = nn.ReLU()
+        self.bn1 = nn.BatchNorm2d(16) #idea from Defossez (King) et al
+        self.relu1 = nn.GELU()
         self.pool1 = nn.MaxPool2d(kernel_size=2, stride=2) #(16, 123, 120)
 
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, padding=1) #(32, 123, 120)
         self.bn2 = nn.BatchNorm2d(32)
-        self.relu2 = nn.ReLU()
+        self.relu2 = nn.GELU()
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=2) #(32, 61, 60)
 
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1) # (64, 61, 60)
         self.bn3 = nn.BatchNorm2d(64)
-        self.relu3 = nn.ReLU()
+        self.relu3 = nn.GELU()
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2) #(64, 30, 30)
 
         #fc layers

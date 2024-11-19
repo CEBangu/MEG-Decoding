@@ -1,4 +1,5 @@
-from torch.utils.data import Dataset 
+from torch.utils.data import Dataset
+import numpy as np
 import json
 import os
 
@@ -8,7 +9,7 @@ class MEGDataset_Conv(Dataset):
         self.label_map = self.get_label_map(label_map)
         self.labels = self.get_labels(self.data_dict, self.label_map)
 
-        self.data, _  = self.data_dict.data_to_tensor() #NB! this is already a torch tensor, and also returns indexes
+        self.data, _  = self.data_dict.data_to_tensor() #NB! this also returns indexes
                                                   # which we want to avoid (the '_')
 
     def get_label_map(self, map_name)->dict:
@@ -47,7 +48,7 @@ class MEGDataset_Conv(Dataset):
     
     def __getitem__(self, index):
         sample = self.data[index]
-        sample = sample.unsqueeze(0)
+        sample = np.expand_dims(sample, axis=0)
         label = self.labels[index]
 
         # if self.transform:
