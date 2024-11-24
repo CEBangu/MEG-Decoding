@@ -135,45 +135,6 @@ class BcomMEG():
             max_length[subjects] = max(syllable_count[subjects].values())
         return max_length
 
-    def padding(self, rows=None, columns=None): #Depricated?
-        if rows is None:
-            rows = list(list(self.data.values())[0].values())[0][0].shape[0]
-        if columns is None:
-            columns = list(list(self.data.values())[0].values())[0][0].shape[1]
-        for subject in self.data:
-            max_length = self.get_max_length(self.get_syllable_counts())
-            for syllable in self.data[subject]:
-                if len(self.data[subject][syllable]) < max_length[subject]:
-                    padding = np.zeros([max_length[subject] - len(self.data[subject][syllable]), rows, columns])
-                    self.data[subject][syllable] = np.concatenate((self.data[subject][syllable], padding))
-        return self.data
-
-    def concat_padded(self, rows=None, columns=None):
-        if rows is None:
-            rows = list(list(self.data.values())[0].values())[0][0].shape[0]
-        if columns is None:
-            columns = list(list(self.data.values())[0].values())[0][0].shape[1]
-        concatenated = np.zeros((0, rows, columns))
-        for subject in self.data:
-            for syllable in self.data[subject]:
-                concatenated = np.concatenate((concatenated, self.data[subject][syllable]), axis=0)
-        return concatenated
-
-    def remove_padding(self, concatenated, rows=None, columns=None):
-        if rows is None:
-            rows = list(list(self.data.values())[0].values())[0][0].shape[0]
-        if columns is None:
-            columns = list(list(self.data.values())[0].values())[0][0].shape[1]
-        padding_array = np.zeros([rows, columns])
-        index_list = []
-        i = -1
-        for slice in concatenated:
-            i += 1
-            if np.array_equal(slice, padding_array):
-                index_list.append(i)
-        concatenated = np.delete(concatenated, index_list, axis=0)
-        return concatenated
-
     def syllable_indexes(self):
         '''This method returns a list that corresponds to each syllables index if data_dict were an array'''
         syllable_indexes = []
@@ -185,21 +146,28 @@ class BcomMEG():
                 i += 1
         return syllable_indexes
 
-    def data_to_tensor(self, rows=None, columns=None): #TODO: it was not smart to return a torch tensor
-        '''This method convets the object into a torch.tensor'''
-        if rows is None:
-            rows = list(list(self.data.values())[0].values())[0][0].shape[0]
-        if columns is None:
-            columns = list(list(self.data.values())[0].values())[0][0].shape[1]
-
-        # data_dictionary_copy = copy.deepcopy(self.data)
-        syllable_idxs = self.syllable_indexes()
-
-        # padded = self.padding(rows, columns) #I guess I don't actually need the padding? Need to revist this later. 
-
-        concatenated = self.concat_padded(rows, columns)
-        unpadded = self.remove_padding(concatenated, rows, columns)
-        return unpadded, syllable_idxs
+    def data_to_tensor(self): # it was not smart to return a torch tensor
+        '''This method converts the object into one large tensor'''
+        #Numpy Acceleration 
+        total_epochs = 0
+        for subject in self.data:
+            total_epochs += sum(len(self.data[subject][syllable]) for syllable in self.data[subject])
+        epoch_shape = ()
+        for subject in self.data:
+            sample_epoch = next(iter(self.data[subject].values()))[0]
+            epoch_shape = sample_epoch.shape
+            break
+        
+        tensor = np.empty((total_epochs, *epoch_shape))
+        
+        index = 0
+        for subject in self.data:
+            for syllable in self.data[subject]:
+                for epoch in self.data[subject][syllable]:
+                    tensor[index] = epoch
+                    index += 1
+        
+        return tensor
 
     def slicer(self, time_start, time_end):
         '''This method returns a new instance of the object that has every epoch sliced time-wise per the values in the arguments'''
