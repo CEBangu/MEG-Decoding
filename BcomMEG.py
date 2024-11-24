@@ -6,6 +6,7 @@ from typing import Tuple
 from numpy.typing import NDArray
 import torch
 import copy
+import warnings
 
 
 class BcomMEG():
@@ -40,12 +41,57 @@ class BcomMEG():
                         data_dict[subject][epo_name] = mne.read_epochs(file, preload=True).pick(picks=self.picks)
         return data_dict
 
-    def get_data(self):
+    def get_raw_data(self):
+        '''This method unpacks the epoch data into its raw form in the data_dict'''
         for subject in self.data:
             for epoch in self.data[subject]:
                 self.data[subject][epoch] = self.data[subject][epoch].get_data()
 
+    #TODO: this currently does epoch by epoch transformation. I should add an option to do it syllable by syllable
+    def get_spectrogram(self, frequencies:NDArray, cycle_divisor:int, baseline:tuple, mode='logratio', data_only=False):
+        '''This method applies the spectrogram transformation to the data from
+        its epo form.'''
+        #Because I can't alter in place for some reason...
+        transformed_data = {}
+        if data_only:
+            print("NB! Data_only is set to true. To get accurate plots, the extent will have to be set manually, and channels \n"
+                  "will have to be specified as indexes, not names")
+        for subject in self.data:
+            if subject not in transformed_data:
+                transformed_data[subject] = {}
+            for syllable in self.data[subject]:
+                if syllable not in transformed_data[subject]:
+                    transformed_data[subject][syllable] = None
+                powers = []
+                for epoch in range(len(self.data[subject][syllable])):
+                    power = mne.time_frequency.tfr_morlet(
+                        self.data[subject][syllable][epoch],
+                        freqs=frequencies,
+                        n_cycles= frequencies/cycle_divisor,
+                        use_fft=True,
+                        return_itc=False,
+                        decim=3,
+                        n_jobs=10
+                    ).apply_baseline(
+                        baseline=baseline,
+                        mode=mode
+                    )
+                    if data_only:
+                        powers.append(power.data)
+                        
+                    else:
+                        powers.append(power)
+                
+                transformed_data[subject][syllable] = powers
+
+
+        return BcomMEG(subjects=self.subjects, data=transformed_data)
     
+    #TODO: ez plotting function for the spectrograms
+
+    # def plot_spectrogram(self, channels:list, syllables:list): 
+        
+    #     pass
 
 
     def get_epo_pca(self) -> Tuple[NDArray, NDArray]:
