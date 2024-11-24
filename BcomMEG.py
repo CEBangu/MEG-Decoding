@@ -37,8 +37,16 @@ class BcomMEG():
                         if (self.avoid_reading == True) and (sum(c.isdigit() for c in epo_name) < 3):
                             continue
                         file = os.path.join(self.dir, file)
-                        data_dict[subject][epo_name] = mne.read_epochs(file, preload=True).pick(picks=self.picks).get_data()
+                        data_dict[subject][epo_name] = mne.read_epochs(file, preload=True).pick(picks=self.picks)
         return data_dict
+
+    def get_data(self):
+        for subject in self.data:
+            for epoch in self.data[subject]:
+                self.data[subject][epoch] = self.data[subject][epoch].get_data()
+
+    
+
 
     def get_epo_pca(self) -> Tuple[NDArray, NDArray]:
         all_epochs = []
