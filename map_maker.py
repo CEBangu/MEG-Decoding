@@ -44,7 +44,7 @@ all_maps = {
     "multi_class_covert": multi_class_covert,
     "multi_class_overt": multi_class_overt,
     "binary_class": binary_class_label_map,
-    "covert_vowel_class": vowel_class_covert_label_map
+    "vowel_class_covert": vowel_class_covert_label_map
 }
 
 # Write the combined dictionary to a single JSON file
