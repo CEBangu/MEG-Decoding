@@ -1,15 +1,28 @@
 from torch.utils.data import Dataset
+import random
 import numpy as np
 import json
 import os
 
-class MEGDataset_Conv(Dataset):
-    def __init__(self, BcomMEG_object, label_map, normalize=False):
+class TripletMEGDataset(Dataset):
+    def __init__(self, BcomMEG_object, label_map, indices, normalize=False):
         self.data_dict = BcomMEG_object 
         self.label_map = self.get_label_map(label_map)
         self.labels = self.get_labels(self.data_dict, self.label_map)
 
         self.data = self.data_dict.data_to_tensor(normalize)
+
+        #ONLY TRAINING SAMPLES (or test)
+        self.indices = indices
+        self.data = self.data[self.indices]
+        self.labels = [self.labels[i] for i in self.indices]
+
+       # Build an index mapping from labels to indices for efficient sampling
+        self.label_to_indices = {}
+        for idx, label in enumerate(self.labels):
+            if label not in self.label_to_indices:
+                self.label_to_indices[label] = []
+            self.label_to_indices[label].append(idx)
 
     def get_label_map(self, map_name)->dict:
         
@@ -41,16 +54,26 @@ class MEGDataset_Conv(Dataset):
             for syllable in syllable_counts[subject]:
                 labels.extend([label_map[syllable]] * syllable_counts[subject][syllable])
         return labels
+    
+
+
 
     def __len__(self):
         return len(self.data)
     
-    def __getitem__(self, index):
-        sample = self.data[index]
-        # sample = np.expand_dims(sample, axis=0)
-        label = self.labels[index]
+    def __getitem__(self, idx):
+        anchor = self.data[idx]
+        anchor_label = self.labels[idx]
+        
+        # Positive samples from the same class, excluding the current idx
+        positive_indices = self.label_to_indices[anchor_label]
+        positive_indices = [i for i in positive_indices if i != idx]
+        random_positive_index = random.choice(positive_indices)
+        positive = self.data[random_positive_index]
 
-        # if self.transform:
-        #     sample = self.transform(sample)
+        # Negative samples from different classes
+        negative_label = random.choice([label for label in self.label_to_indices if label != anchor_label])
+        negative_index = random.choice(self.label_to_indices[negative_label])
+        negative = self.data[negative_index]
 
-        return sample, label
+        return anchor, positive, negative

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 from numpy.typing import NDArray
+import sklearn.preprocessing as sk
 import torch
 import copy
 import warnings
@@ -146,7 +147,7 @@ class BcomMEG():
                 i += 1
         return syllable_indexes
 
-    def data_to_tensor(self): # it was not smart to return a torch tensor
+    def data_to_tensor(self, normalize=False): # it was not smart to return a torch tensor
         '''This method converts the object into one large tensor'''
         #Numpy Acceleration 
         total_epochs = 0
@@ -165,6 +166,11 @@ class BcomMEG():
             for syllable in self.data[subject]:
                 for epoch in self.data[subject][syllable]:
                     tensor[index] = epoch
+                    
+                    #TODO: normalization
+                    # if normalize:
+                    #     tensor[index][epoch] = (tensor[index][epoch] - tensor[index][epoch].mean(axis=(0, 1), keepdims=True)) / tensor[index][epoch].std(axis=(0, 1), keepdims=True)
+
                     index += 1
         
         return tensor

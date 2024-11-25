@@ -17,12 +17,12 @@ class BigTripletNet(nn.Module): #this one is designed to take in all the sensors
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
         self.bn3 = nn.BatchNorm2d(64)
         self.act3 = nn.ReLU()
-        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2) #(64, 6, 10)
+        self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2) #64, 6, 10
 
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
         self.bn4 = nn.BatchNorm2d(128)
         self.act4 = nn.ReLU()
-        self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2) #(128, 3, 5)
+        self.pool4 = nn.MaxPool2d(kernel_size=2, stride=2) #128, 3, 5
 
         #FC layers
         self.fc1 = nn.Linear(1920, 512)
@@ -35,9 +35,9 @@ class BigTripletNet(nn.Module): #this one is designed to take in all the sensors
         x = self.pool3(self.act3(self.bn3(self.conv3(x))))
         x = self.pool4(self.act4(self.bn4(self.conv4(x))))
 
+
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
         x = self.fc2(x)
-        print(x.shape)
 
         return x
