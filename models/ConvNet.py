@@ -17,7 +17,7 @@ class ConvNet(nn.Module):
         self.bn3 = nn.BatchNorm2d(64)
         self.relu3 = nn.GELU()
         self.pool3 = nn.MaxPool2d(kernel_size=2, stride=2) #(64, 30, 30)
-
+            
         #fc layers
         self.fc1 = nn.Linear(57600, 512)
         self.fc2 = nn.Linear(512, 18)
