@@ -2,4 +2,4 @@
 
 This repository aims to answer this question. It is also my Master's Thesis. 
 
-Projected Completion data: June 2025 
+Projected completion date: June 2025 
