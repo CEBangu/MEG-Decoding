@@ -4,6 +4,7 @@
 /pyrightconfig.json
 /.DS_Store
 /notebooks/import_test.ipynb
+*.DS_Store
 /__pycache__
 *.png
 /images
