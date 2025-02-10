@@ -11,3 +11,4 @@
 /Data_Sample
 __pycache__/
 *.npy
+*.pt
