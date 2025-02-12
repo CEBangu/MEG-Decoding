@@ -12,11 +12,12 @@ import warnings
 
 
 class BcomMEG():
-    def __init__(self, subjects, dir=None, data=None, picks=None, avoid_reading=True):
+    def __init__(self, subjects, dir=None, data=None, picks=None, avoid_reading=True, avoid_producing=False):
         self.dir = dir
         self.subjects = subjects
         self.picks = picks
         self.avoid_reading = avoid_reading
+        self.avoid_producing = avoid_producing
 
         if data:
             self.data = data
@@ -38,6 +39,8 @@ class BcomMEG():
                     if file.startswith(subject):
                         epo_name = file[10:-8]
                         if (self.avoid_reading == True) and (sum(c.isdigit() for c in epo_name) < 3):
+                            continue
+                        if (self.avoid_producing == True) and (sum(c.isdigit() for c in epo_name) >= 3):
                             continue
                         file = os.path.join(self.dir, file)
                         data_dict[subject][epo_name] = mne.read_epochs(file, preload=True).pick(picks=self.picks)
