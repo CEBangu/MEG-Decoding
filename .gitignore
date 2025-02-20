@@ -20,3 +20,4 @@ __pycache__/
 *.tex
 *.pkl
 /saved_data
+/a_scalograms_test
