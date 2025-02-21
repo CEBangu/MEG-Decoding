@@ -21,3 +21,7 @@ __pycache__/
 *.pkl
 /saved_data
 /a_scalograms_test
+/e_scalograms_test
+/i_scalograms_test
+/scalograms_test
+*.pth
