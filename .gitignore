@@ -25,3 +25,4 @@ __pycache__/
 /i_scalograms_test
 /scalograms_test
 *.pth
+/vit-base-patch16-224-finetune_test

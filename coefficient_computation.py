@@ -3,6 +3,7 @@ import os
 import pywt
 import numpy as np
 from datahandling import BcomMEG
+import time
 
 def scalogram_de_reconstruction(data, wavelet='db4', level=5):
     # First decompose
@@ -29,7 +30,7 @@ def main():
     parser.add_argument('--avoid_reading', action='store_true', help="do you want to avoid the reading epochs?")
     parser.add_argument('--avoid_producing', action='store_true', help="do you want to avoid producing epochs?")
     parser.add_argument('--speech_type', type=str, required=True, help="Covert or Overt?")
-    parser.add_argument('--output_path', type=str, required=True, default='output.txt', help="Output file path")
+    # parser.add_argument('--output_path', type=str, required=True, default='output.txt', help="Output file path")
 
 
 
@@ -50,12 +51,30 @@ def main():
 
 
     data.get_raw_data()
+    sampling_rate = 300
+    log_samples = 100
+    wavelet = 'cmor'
+    B = 1.0
+    C = 1.0 
 
     for subject in data.data:
         for syllable in data.data[subject]:
+            all_coefficients = np.zeros((data.data[subject][syllable].shape[0], data.data[subject][syllable].shape[1], log_samples, data.data[subject][syllable].shape[2]))
+            for epoch in range(data.data[subject][syllable].shape[0]):
+                start_time = time.time()
+                for channel in range(data.data[subject][syllable].shape[1]):
+                    
 
+                    signal = data.data[subject][syllable][epoch][channel]
+                    processed = scalogram_de_reconstruction(signal, wavelet='db4', level=5)
+                    coefficients = scalogram_cwt(processed_data=processed, B=B, C=C, wavelet=wavelet, sampling_rate=sampling_rate, log_samples=log_samples)
+                    # need one that is 1xchannelxcoefficientsxtime
+                    all_coefficients[epoch, channel] = np.abs(coefficients)
 
-
+                end_time = time.time()    
+                print(f"Processing time for subject {subject}, syllable {syllable}, epoch {epoch}: {end_time - start_time} seconds")
+                
+            np.save(f"{subject}_{syllable}_coefficients.npy", all_coefficients)
 
 if __name__ == "__main__":
     main()
