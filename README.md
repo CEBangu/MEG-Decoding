@@ -15,6 +15,8 @@ Projected completion date: June 2025
 
 ## Current Organization:
 
+**NB!** some of the files will be broken because of path references/import errors because of running it from the server/changes in organization. I guess these will be fixed 1 by 1. 
+
 Currently, it's a bit of a mess. But here is a bit of an overview of the main ones:
 
 ### Subdirectories:

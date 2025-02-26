@@ -26,3 +26,4 @@ __pycache__/
 /scalograms_test
 *.pth
 /vit-base-patch16-224-finetune_test
+/wandb
