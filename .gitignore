@@ -27,3 +27,4 @@ __pycache__/
 *.pth
 /vit-base-patch16-224-finetune_test
 /wandb
+/google
