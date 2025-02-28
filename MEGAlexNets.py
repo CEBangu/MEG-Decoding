@@ -94,7 +94,7 @@ class AlexNetMPSFinalOnly(nn.Module, LayerFreezeResetMixin):
 
     def forward(self, x):
         x = self.features(x)  # Feature extraction
-        if torch.backends.mps.is_available():
+        if x.device.type == "mps":
             x = self.avgpool(x.to("cpu")).to(x.device)
         else:
             x = self.avgpool(x)    
@@ -125,7 +125,7 @@ class AlexNetMPSSuddenDescend(nn.Module, LayerFreezeResetMixin):
         
     def forward(self, x):
         x = self.features(x)  # Feature extraction
-        if torch.backends.mps.is_available():
+        if x.device.type == "mps":
             x = self.avgpool(x.to("cpu")).to(x.device)
         else:
             x = self.avgpool(x)    
@@ -161,7 +161,7 @@ class AlexNetMPSLongDescend(nn.Module, LayerFreezeResetMixin):
 
     def forward(self, x):
         x = self.features(x)  # Feature extraction
-        if torch.backends.mps.is_available():
+        if x.device.type == "mps":
             x = self.avgpool(x.to("cpu")).to(x.device)
         else:
             x = self.avgpool(x)    
@@ -193,7 +193,7 @@ class AlexNetMPSDescend(nn.Module, LayerFreezeResetMixin):
         
     def forward(self, x):
         x = self.features(x)  # Feature extraction
-        if torch.backends.mps.is_available():
+        if x.device.type == "mps":
             x = self.avgpool(x.to("cpu")).to(x.device)
         else:
             x = self.avgpool(x)    
