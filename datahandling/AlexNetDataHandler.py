@@ -1,15 +1,21 @@
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
+from torchvision import transforms
 import pandas as pd
 import os
 from PIL import Image
 
 class AlexNetDataClass(Dataset):
-    def __init__(self, csv_file, img_directory, transform=None):
+    def __init__(self, csv_file, img_directory):
         self.data = pd.read_csv(csv_file)
         self.img_directory = img_directory
-        self.transform = transform
-
+        self.transform = transforms.Compose([
+            transforms.Resize(224),
+            # transforms.RandomCrop(224),
+            transforms.ToTensor(),
+            transforms.Lambda(lambda x: x[:3, :, :]),  # remove alpha channel
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
     def __len__(self):
         return len(self.data)
@@ -24,3 +30,4 @@ class AlexNetDataClass(Dataset):
             image = self.transform(image)
 
         return image, label
+

@@ -1,5 +1,4 @@
 import argparse
-import os
 import pywt
 import numpy as np
 from datahandling import BcomMEG
@@ -14,11 +13,7 @@ def scalogram_de_reconstruction(data, wavelet='db4', level=5):
     reconstructed_signal = pywt.waverec(coefficients, wavelet)[:len(data)]
     return reconstructed_signal
 
-def scalogram_cwt(processed_data, wavelet, B, C, sampling_rate, log_samples):
-    wavelet = f'{wavelet}{B}-{C}'
-    sampling_period = 1/sampling_rate
-    frequencies = np.logspace(np.log10(1), np.log10(sampling_rate/2), log_samples)
-    scales = pywt.central_frequency(wavelet=wavelet)/ (frequencies * sampling_period)
+def scalogram_cwt(processed_data, wavelet, scales, sampling_period):
     coefficients, _ = pywt.cwt(data=processed_data, scales=scales, wavelet=wavelet, sampling_period=sampling_period)
     return coefficients
 
@@ -53,9 +48,13 @@ def main():
     data.get_raw_data()
     sampling_rate = 300
     log_samples = 100
-    wavelet = 'cmor'
+    wavelet_name = 'cmor'
     B = 1.0
     C = 1.0 
+    wavelet = f'{wavelet_name}{B}-{C}'
+    frequencies = np.logspace(np.log10(1), np.log10(sampling_rate/2), log_samples)
+    sampling_period = 1/sampling_rate
+    scales = pywt.central_frequency(wavelet=wavelet)/ (frequencies * sampling_period)
 
     for subject in data.data:
         for syllable in data.data[subject]:
