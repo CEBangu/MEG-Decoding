@@ -37,6 +37,14 @@ SUBJECT_LISTS=(
     "BCOM_26_2 BCOM_26_3 BCOM_26_4"
 )
 
+# make scratch dir because I actually don't have one yet
+SCRATCH_DIR="/scratch/$USER/coefficients"
+FINAL_STORAGE="/pasteur/zeus/projets/p02/BCOM/coefficients"
+
+# make sure the directories exist
+mkdir -p $SCRATCH_DIR
+mkdir -p $FINAL_STORAGE
+
 # activate virtual env
 source $HOME/venvs/coefficients_env/bin/activate
 
@@ -54,3 +62,19 @@ echo "Running job for subjects: $SUBJECTS"
 
 # run the python script
 python3 coefficient_array_job.py --subject_list $SUBJECTS --speech_type covert
+
+# copy the results to the final storage
+echo "Copying results to final storage"
+mv $SCRATCH_DIR/* $FINAL_STORAGE
+
+if [ $? -eq 0 ]; then
+    echo " Files successfully moved to $FINAL_STORAGE"
+
+    # Delete the temporary scratch directory
+    rm -rf $SCRATCH_DIR
+    echo " Cleaned up $SCRATCH_DIR"
+else
+    echo "WARNING: File move failed! Scratch directory NOT deleted."
+fi
+
+echo "jobe done"
