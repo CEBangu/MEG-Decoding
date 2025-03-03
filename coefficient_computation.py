@@ -31,14 +31,14 @@ def main():
 
     args = parser.parse_args()
 
-    speech_type = args.speech_type.upper()
+    speech_type = args.speech_type.upper() # to standardize input
     # directory = f'/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/{speech_type}' # change to Zeus?
     directory = "/Users/ciprianbangu/Cogmaster/M2 Internship/BCI code/Data_Sample"
     subject_list = args.subject_list
     avoid_reading = args.avoid_reading
     avoid_producing = args.avoid_producing
 
-    data = BcomMEG(subjects=subject_list,
+    data = BcomMEG(subjects=subject_list, # load data
                    dir=directory,
                    avoid_producing=avoid_producing,
                    avoid_reading=avoid_reading

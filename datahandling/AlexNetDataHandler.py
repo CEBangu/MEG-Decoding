@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from PIL import Image
 
-class AlexNetDataClass(Dataset):
+class AlexNetDataHandler(Dataset):
     def __init__(self, csv_file, img_directory):
         self.data = pd.read_csv(csv_file)
         self.img_directory = img_directory

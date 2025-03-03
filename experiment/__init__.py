@@ -12,6 +12,10 @@ __all__ = [
     'accuracy_metric'
     ]
 
-from .experiment_funcs import compute_metrics, train_val_wandb, sweep_train, get_optimizer
+from .cnn_experiment_funcs import cnn_compute_metrics, cnn_train_val_wandb, cnn_sweep_train, get_optimizer
 
-__all__ += ['compute_metrics', 'train_val_wandb', 'sweep_train', 'get_optimizer']
+__all__ += ['cnn_compute_metrics', 'cnn_train_val_wandb', 'cnn_sweep_train', 'get_optimizer']
+
+from .vit_experiment_funcs import collate_fn, vit_compute_metrics, vit_sweep_kfold
+
+__all__ += ['collate_fn', 'vit_compute_metrics', 'vit_sweep_kfold']

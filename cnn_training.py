@@ -5,9 +5,9 @@ import torch
 
 ## custom imports
 
-from datahandling import AlexNetDataClass
-from MEGAlexNets import AlexNetMPSDescend, AlexNetMPSFinalOnly, AlexNetMPSLongDescend, AlexNetMPSSuddenDescend
-from experiment import sweep_train
+from datahandling import AlexNetDataHandler
+from models.MEGAlexNets import AlexNetMPSDescend, AlexNetMPSFinalOnly, AlexNetMPSLongDescend, AlexNetMPSSuddenDescend
+from experiment import cnn_sweep_train
 
 
 
@@ -49,21 +49,22 @@ def main():
 }
     wandb_key = args.wandb_key
     wandb.login(key=wandb_key)
-    sweep_id = wandb.sweep(sweep_config, project="CNN_KFold_HyperSweep")
+    sweep_id = wandb.sweep(sweep_config, project=f"{args.model_type}_KFold_HyperSweep")
 
     data = args.dataset 
-    dataset = AlexNetDataClass(csv_file=data_dict[data][0],
+    dataset = AlexNetDataHandler(csv_file=data_dict[data][0],
                                img_directory=data_dict[data][1]
                                )
 
-    mode_class = model_dict[args.model_type]
+    model_class = model_dict[args.model_type]
     device = "cuda" if torch.cuda.is_available() else "cpu"
     freeze_type = args.freeze_type
 
     wandb.agent(sweep_id, 
-                function=lambda:sweep_train(
+                function=lambda:cnn_sweep_train(
+                    model_type=args.model_type,
                     dataset=dataset, 
-                    model_class=mode_class, 
+                    model_class=model_class, 
                     device=device,
                     k=10,
                     freeze_type=freeze_type
