@@ -40,8 +40,8 @@ def main():
 
     
     speech_type = args.speech_type.upper() # to standardize input
-    # directory = f'/Volumes/@neurospeech/PROJECTS/BCI/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/{speech_type}' # change to Zeus?
-    directory = "/Users/ciprianbangu/Cogmaster/M2 Internship/BCI code/Data_Sample"
+    directory = f'/Volumes/BCOM/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/{speech_type}'
+    # directory = "/Users/ciprianbangu/Cogmaster/M2 Internship/BCI code/Data_Sample"
     subject_list = args.subject_list
     subject_list = [subject.upper() for subject in subject_list] # to standardize input, just in case
 
