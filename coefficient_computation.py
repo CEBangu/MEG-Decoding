@@ -1,9 +1,18 @@
 import argparse
 import pywt
+import os
 import numpy as np
 from datahandling import BcomMEG
 import time
 from joblib import Parallel, delayed
+
+
+def save_results(subject, syllable, all_coefficients, save_dir):
+    """ Save computed coefficients to the correct directory """
+    os.makedirs(save_dir, exist_ok=True)  # Ensure the directory exists
+    output_file = os.path.join(save_dir, f"{subject}_{syllable}_coefficients.npy")
+    np.save(output_file, all_coefficients)
+    print(f"Saved results to {output_file}")
 
 def scalogram_de_reconstruction(data, wavelet='db4', level=5):
     # First decompose
@@ -32,7 +41,8 @@ def main():
     parser.add_argument('--avoid_reading', action='store_true', help="do you want to avoid the reading epochs?")
     parser.add_argument('--avoid_producing', action='store_true', help="do you want to avoid producing epochs?")
     parser.add_argument('--speech_type', type=str, required=True, help="Covert or Overt?")
-    # parser.add_argument('--output_path', type=str, required=True, default='output.txt', help="Output file path")
+    parser.add_argument('--data_dir', type=str, help="Directory where the data is stored")
+    parser.add_argument('--save_dir', type=str, required=True, help="Directory to save the coefficients")
 
 
 
@@ -40,7 +50,9 @@ def main():
 
     
     speech_type = args.speech_type.upper() # to standardize input
-    directory = f'/Volumes/BCOM/BCOM/DATA_ANALYZED/EVOKED/DATA/WITHOUT_BADS/{speech_type}'
+    data_dir = args.data_dir
+    data_dir = os.path.join(data_dir, speech_type)
+    save_dir = args.save_dir
     # directory = "/Users/ciprianbangu/Cogmaster/M2 Internship/BCI code/Data_Sample"
     subject_list = args.subject_list
     subject_list = [subject.upper() for subject in subject_list] # to standardize input, just in case
@@ -49,7 +61,7 @@ def main():
     avoid_producing = args.avoid_producing
 
     data = BcomMEG(subjects=subject_list, # load data
-                   dir=directory,
+                   dir=data_dir,
                    avoid_producing=avoid_producing,
                    avoid_reading=avoid_reading
                    )
@@ -105,7 +117,11 @@ def main():
                 end_time = time.time()    
                 print(f"Processing time for subject {subject}, syllable {syllable}, epoch {epoch}: {end_time - start_time} seconds")
                 
-            np.save(f"{subject}_{syllable}_coefficients.npy", all_coefficients)
+            save_results(
+                subject=subject,
+                syllable=syllable,
+                all_coefficients=all_coefficients,
+                save_dir=save_dir)
 
 if __name__ == "__main__":
     main()

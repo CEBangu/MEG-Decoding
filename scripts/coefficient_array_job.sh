@@ -10,6 +10,8 @@
 #SBATCH --cpus-per-task=8 # let's take 8 cpus because we parallelized the channels
 #SBATCH --mem=24000 # memory in MB
 #SBATCH --array=1-21 # number of jobs in the array
+#SBATCH --mail-type=END,FAIL # send email on job end and if it fails
+#SBATCH --mail-user=ciprian.bangu@pasteur.fr # email
 
 SUBJECT_LISTS=(
     "BCOM_01_2 BCOM_01_3 BCOM_01_4"
@@ -36,10 +38,10 @@ SUBJECT_LISTS=(
 )
 
 # activate virtual env
-source $HOME/venv/bin/activate
+source $HOME/venvs/coefficients_env/bin/activate
 
 # set pythonpath so we can import the custom modules
-export PYTHONPATH="$HOME/projects:$PYTHONPATH"
+export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
 # want the correct index for the slurm array job
