@@ -4,11 +4,6 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 from numpy.typing import NDArray
-import sklearn.preprocessing as sk
-import torch
-import copy
-import warnings
-import warnings
 
 
 class BcomMEG():
