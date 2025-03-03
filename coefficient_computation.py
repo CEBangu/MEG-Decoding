@@ -45,13 +45,20 @@ def main():
                    )
 
 
-    data.get_raw_data()
-    sampling_rate = 300
-    log_samples = 100
-    wavelet_name = 'cmor'
-    B = 1.0
-    C = 1.0 
-    wavelet = f'{wavelet_name}{B}-{C}'
+    data.get_raw_data() # extract the data from the EPO objects
+
+    # DWT Denoize variables
+    dwt_wavelet_name='db4' # denoizing wavelet 
+    level=5 # level of decomposition. NB in Dash et al. they use 7, but our signal is shorter, so 5 is max
+    
+    
+    # CWT Reconstruction variables - better to compute as much outside the loop b/c lots of repetitions
+    sampling_rate = 300 # data already downsampled to 300 at this point
+    log_samples = 100 # we want 100 coefficients
+    cwt_wavelet_name = 'cmor' # reconstruction wavelet
+    B = 1.0 # wavelet bandwith (higher means more frequencies at each scale, but less precision in peak timing)
+    C = 1.0 # central frequency (higher means more oscialltions per time window, meaning higher frequency features per scale)
+    wavelet = f'{cwt_wavelet_name}{B}-{C}'
     frequencies = np.logspace(np.log10(1), np.log10(sampling_rate/2), log_samples)
     sampling_period = 1/sampling_rate
     scales = pywt.central_frequency(wavelet=wavelet)/ (frequencies * sampling_period)
@@ -65,8 +72,8 @@ def main():
                     
 
                     signal = data.data[subject][syllable][epoch][channel]
-                    processed = scalogram_de_reconstruction(signal, wavelet='db4', level=5)
-                    coefficients = scalogram_cwt(processed_data=processed, B=B, C=C, wavelet=wavelet, sampling_rate=sampling_rate, log_samples=log_samples)
+                    processed = scalogram_de_reconstruction(signal, wavelet=dwt_wavelet_name, level=level)
+                    coefficients = scalogram_cwt(processed_data=processed, wavelet=wavelet, scales=scales, sampling_period=sampling_period)
                     # need one that is 1xchannelxcoefficientsxtime
                     all_coefficients[epoch, channel] = np.abs(coefficients)
 
