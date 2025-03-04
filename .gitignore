@@ -28,3 +28,4 @@ __pycache__/
 /vit-base-patch16-224-finetune_test
 /wandb
 /google
+*config.sh
