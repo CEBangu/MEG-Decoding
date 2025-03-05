@@ -38,7 +38,7 @@ class ScalogramPlotter:
         fig, ax = plt.subplots(
             self.dimensions[0], 
             self.dimensions[1], 
-            figsize=(self.figsize)
+            figsize=(self.figsize))
         
         ax = np.array(ax, ndmin=2) # otherwise parser complains - might ahve to revisit this though
         
