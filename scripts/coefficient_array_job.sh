@@ -2,7 +2,7 @@
 #SBATCH --job-name=coefficient_array_job # name
 #SBATCH --output=output_%A_%a.log # Job Array ID, Task ID
 #SBATCH --error=error_%A_%a.log # Job Array ID, Task ID
-#SBATCH --time=00:30:00 # timelimit - shouldn't take more than 20 mins if the nodes are available
+#SBATCH --time=02:00:00 # timelimit - shouldn't take more than 20 mins if the nodes are available
 #SBATCH --partition=common # partition
 #SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
 #SBATCH --nodes=1 # number of nodes
@@ -76,21 +76,21 @@ echo "python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJ
 # run the python script
 python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR"
 
-# Verify files exist before moving
-if [ "$(ls -A "$SCRATCH_DIR" 2>/dev/null)" ]; then
-    echo "Copying results to final storage..."
-    rsync -av --info=progress2 "$SCRATCH_DIR/" "$FINAL_STORAGE/"
+# # Verify files exist before moving
+# if [ "$(ls -A "$SCRATCH_DIR" 2>/dev/null)" ]; then
+#     echo "Copying results to final storage..."
+#     rsync -av --info=progress2 "$SCRATCH_DIR/" "$FINAL_STORAGE/"
 
-    if [ $? -eq 0 ]; then
-        echo "Files successfully moved to $FINAL_STORAGE"
-    else
-        echo "ERROR: File move failed."
-    fi
-else
-    echo "WARNING: No files in $SCRATCH_DIR to move."
-fi
+#     if [ $? -eq 0 ]; then
+#         echo "Files successfully moved to $FINAL_STORAGE"
+#     else
+#         echo "ERROR: File move failed."
+#     fi
+# else
+#     echo "WARNING: No files in $SCRATCH_DIR to move."
+# fi
 
-# Keep scratch directory untouched (no deletions)
-echo "Skipping deletion of $SCRATCH_DIR for verification."
+# # Keep scratch directory untouched (no deletions)
+# echo "Skipping deletion of $SCRATCH_DIR for verification."
 
-echo "Job done."
+# echo "Job done."
