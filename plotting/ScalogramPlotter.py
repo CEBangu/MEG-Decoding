@@ -19,7 +19,7 @@ class ScalogramPlotter:
         self.average = average
         self.resolution = resolution
 
-        self.figsize=8 # this is just the standard
+        self.figsize= (8, 8) # this is just the standard
 
         # Error handling
         if len(index_list) > dimensions[0] * dimensions[1]:
@@ -38,8 +38,7 @@ class ScalogramPlotter:
         fig, ax = plt.subplots(
             self.dimensions[0], 
             self.dimensions[1], 
-            figsize=(self.figsize, 
-                     self.figsize))
+            figsize=(self.figsize)
         
         ax = np.array(ax, ndmin=2) # otherwise parser complains - might ahve to revisit this though
         
@@ -79,9 +78,7 @@ class ScalogramPlotter:
 
     def plot_average_scalogram(self, coefficients: np.ndarray):
         """Plots the average scalogram of all the coefficients"""
-        fig, axes = plt.subplots(
-            figsize=(self.figsize, 
-                     self.figsize))
+        fig, axes = plt.subplots(figsize=self.figsize)
         
         average = np.mean(np.abs(coefficients), axis=0)
         axes.pcolormesh(average)
@@ -94,10 +91,12 @@ class ScalogramPlotter:
 
         plt.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0, wspace=0)
         fig.patch.set_visible(False)
+
+        return fig
     
     def save_plot(self, filename, fig):
         """Saves the plot in the save directory"""
-        dpi = self.resolution / self.figsize
+        dpi = self.resolution / self.figsize[0]
         fig.savefig(os.path.join(self.save_dir, f"{filename}.png"), dpi=dpi)
         plt.close(fig)
         return None
