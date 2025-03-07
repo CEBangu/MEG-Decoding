@@ -45,11 +45,6 @@ echo "MODEL_TYPE: $MODEL_TYPE"
 echo "FREEZE_TYPE: $FREEZE_TYPE"
 echo "LABELS: $LABELS"
 echo "DATA_DIR: $DATA_DIR"
-if [[ -n "$WANDB_KEY" ]]; then
-    echo "WANDB_KEY set"
-else
-    echo "WANDB_KEY not set!"
-fi
 
 # set pythonpath so we can import the custom modules
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"

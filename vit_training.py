@@ -16,15 +16,10 @@ def main():
     parser.add_argument('--model_path', type=str, required=True, help="The HF Model Path")
     parser.add_argument('--sweep_name', type=str, required=True, help="Name of the sweep")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
-    parser.add_argument('--dataset', type=str, required=True, help="the dataset you want to train on")
-
+    parser.add_argument('--labels', type=str, required=True, help='path to label csv')
+    parser.add_argument('--data_dir', type=str, required=True, help="path to image dir")
 
     args = parser.parse_args()
-
-    data_dict = {
-        "all_scalograms": ["labels_path", "data_path"], # need to find out what these actually are
-        "averaged_scalograms": ["labels_path", "data_path"]
-    }
 
     sweep_config = {
         "method": "bayes",
@@ -54,8 +49,8 @@ def main():
         print("not logged in to HF!")
 
     data = args.dataset
-    data_handler = ViTDataHandler(label_path=data_dict[data][0], 
-                             image_path=data_dict[data][1],
+    data_handler = ViTDataHandler(label_path=args.labels, 
+                             image_path=args.data_dir,
                              processor_path=args.model_path)
 
     dataset = data_handler.dataset
