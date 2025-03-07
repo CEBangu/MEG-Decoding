@@ -29,3 +29,4 @@ __pycache__/
 /wandb
 /google
 *config.sh
+model_download.py
