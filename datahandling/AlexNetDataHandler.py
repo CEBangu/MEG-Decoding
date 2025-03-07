@@ -10,7 +10,7 @@ class AlexNetDataHandler(Dataset):
         self.data = pd.read_csv(csv_file)
         self.img_directory = img_directory
         self.transform = transforms.Compose([
-            transforms.Resize(224),
+            transforms.Resize((224,224)),
             # transforms.RandomCrop(224),
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x[:3, :, :]),  # remove alpha channel

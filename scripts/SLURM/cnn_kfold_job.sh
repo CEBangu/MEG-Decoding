@@ -5,8 +5,8 @@
 #SBATCH --partition=gpu
 #SBATCH --qos=ultrafast
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task:8
-#SBATCH --mem:50000 #50GB
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=50000 #50GB
 
 # load cuda
 module load cuda/12.8
@@ -43,6 +43,7 @@ fi
 # Debugging output
 echo "MODEL_TYPE: $MODEL_TYPE"
 echo "FREEZE_TYPE: $FREEZE_TYPE"
+echo "NUM_FOLDS: $NUM_FOLDS"
 echo "LABELS: $LABELS"
 echo "DATA_DIR: $DATA_DIR"
 
@@ -50,5 +51,5 @@ echo "DATA_DIR: $DATA_DIR"
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --labels --data_dir --wandb_key $WANDB_KEY
+python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
 

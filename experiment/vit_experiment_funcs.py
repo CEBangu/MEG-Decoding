@@ -73,7 +73,7 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
     """Train dataset has to be dataset["train"]
     Unlike with the CNN, the trainer handles the training/validation loop here
     """
-    wandb_dir = os.get_env("WANDB_DIR")
+    wandb_dir = os.getenv("WANDB_DIR")
     hf_output_dir = os.getenv("HF_OUTPUT_DIR")
 
     #wandb configuration setup. 

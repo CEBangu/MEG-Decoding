@@ -205,7 +205,7 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
     This function handles the wandb parameter sweep for a given cnn model architecture
 
     """
-    wandb_dir = os.get_env("WANDB_DIR")
+    wandb_dir = os.getenv("WANDB_DIR")
     run = wandb.init(
         project=f"{model_type}_KFold_HyperSweep",
         dir=wandb_dir
