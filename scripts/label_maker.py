@@ -21,7 +21,7 @@ def main():
     # combining vowels and consonants, but labeled by vowels
     scalogram_files_producing = os.listdir(args.data_dir_producing)
     scalogram_files_reading = os.listdir(args.data_dir_reading)
-    csv_file = os.path.join(args.save_dir, f'combined_labels_{args.res_dims}.csv')
+    csv_file = os.path.join(args.save_dir, f'combined_labels_{args.res_dims}_all.csv')
     
 
     with open(csv_file, mode='w', newline='') as file:
