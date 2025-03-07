@@ -44,7 +44,7 @@ else
 fi
 
 # Debugging output
-echo "MODEL_TYPE: $MODEL_TYPE"
+echo "MODEL_PATH: $MODEL_PATH"
 echo "FREEZE_TYPE: $FREEZE_TYPE"
 echo "NUM_FOLDS: $NUM_FOLDS"
 echo "LABELS: $LABELS"
@@ -54,5 +54,5 @@ echo "DATA_DIR: $DATA_DIR"
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
+python3 $HOME/MEG-Decoding/cnn_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
 

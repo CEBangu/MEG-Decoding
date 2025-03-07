@@ -14,8 +14,8 @@ def main():
     parser = argparse.ArgumentParser(description="This script runs the KFold Validation parameter sweep for the vision transfromer model(s)")
 
     parser.add_argument('--model_path', type=str, required=True, help="The HF Model Path")
-    parser.add_argument('--sweep_name', type=str, required=True, help="Name of the sweep")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
+    parser.add_argument('--k_folds', type=int, required=True, help="How many folds")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
     parser.add_argument('--data_dir', type=str, required=True, help="path to image dir")
 
@@ -38,8 +38,7 @@ def main():
 
 
     wandb.login() # key stored as env var
-    sweep_name = args.sweep_name
-    sweep_id = wandb.sweep(sweep_config, project=sweep_name)
+    sweep_id = wandb.sweep(sweep_config, project=f"{args.model_type}_KFold_HyperSweep")
 
     hf_token = os.get_env("HF_TOKEN")
     if hf_token:
@@ -48,7 +47,6 @@ def main():
     else:
         print("not logged in to HF!")
 
-    data = args.dataset
     data_handler = ViTDataHandler(label_path=args.labels, 
                              image_path=args.data_dir,
                              processor_path=args.model_path)
@@ -59,6 +57,8 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     freeze_type = args.freeze_type
 
+    k = args.k_folds
+
     wandb.agent(sweep_id, 
                 function=lambda:vit_sweep_kfold(
                     train_dataset=dataset,
@@ -68,7 +68,7 @@ def main():
                     num_classes=3,
                     config=sweep_config,
                     freeze_type=args.freeze_type,
-                    k=10
+                    k=k
                 ),
                 count=10
                 )

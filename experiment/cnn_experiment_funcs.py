@@ -1,11 +1,13 @@
 import torch.optim as optim 
 import torch
+import torch.nn as nn
 import wandb
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader, Subset
 
 from experiment import f1_metric, precision_metric, accuracy_metric, recall_metric
@@ -225,8 +227,19 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
         train_subset = Subset(dataset, train_index.tolist())
         val_subset = Subset(dataset, val_index.tolist())
 
-        train_loader = DataLoader(train_subset, batch_size=config.batch_size, shuffle=True)
-        val_loader = DataLoader(val_subset, batch_size=config.batch_size, shuffle=False)
+        train_loader = DataLoader(
+            train_subset, 
+            batch_size=config.batch_size, 
+            shuffle=True, 
+            num_workers=8, 
+            pin_memory=True
+            )
+        
+        val_loader = DataLoader(
+            val_subset, 
+            batch_size=config.batch_size, 
+            shuffle=False
+            )
 
         # Ensure no overlap between train and validation sets
         assert not set(train_index).intersection(set(val_index)), "Train and validation sets overlap!"
@@ -261,8 +274,8 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
                                        val_loader=val_loader, 
                                        criterion=criterion, 
                                        optimizer=optimizer, 
-                                       num_epochs=10, 
-                                       device=device, 
+                                       num_epochs=80, # can mess around with this
+                                       device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)
 

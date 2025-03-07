@@ -34,7 +34,7 @@ def main():
     "metric": {"name": "avg_val_loss", "goal": "minimize"},
     "parameters": {
         "learning_rate": {"values": [1e-4, 3e-4, 1e-3]},
-        "batch_size": {"values": [16, 32]},
+        "batch_size": {"values": [32, 64]},
         "optimizer": {"values": ["adam", "sgd"]},
         "weight_decay": {"values": [0.0, 1e-4, 1e-3]} # regularization - do we really need this?
     },
