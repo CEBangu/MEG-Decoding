@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use("Agg") # NON GUI
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -43,8 +45,6 @@ class ScalogramPlotter:
         ax = np.array(ax, ndmin=2) # otherwise parser complains - might ahve to revisit this though
         
         for channel_index, channel in enumerate(coefficients):
-            print(channel_index)
-            print(channel.shape)
             # check if the channel index is in the index list in case you don't want to plot all of them.
             if channel_index in self.index_list:
                 # plots them as a square grid
