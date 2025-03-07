@@ -16,7 +16,8 @@ def main():
 
     parser.add_argument('--model_type', type=str, required=True, help="The model architecture you want to train")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
-    parser.add_argument('--dataset', type=str, required=True, help="the dataset you want to train on. Can be 'all_scalograms' or 'averaged_scalograms'") #update as needed
+    parser.add_argument('--labels', type=str, required=True, help='path to label csv')
+    parser.add_argument('--data_dir', type=str, required=True, help="path to image directory you want to train on") #update as needed
     parser.add_argument('--wandb_key', type=str, required=True, help="Wandb api key for tracking login") 
 
     args = parser.parse_args()
@@ -26,11 +27,6 @@ def main():
         "AlexNetSuddenDescend": AlexNetMPSDescend,
         "AlexNetLongDescend" : AlexNetMPSLongDescend,
         "AlexNetSuddenDescend": AlexNetMPSSuddenDescend
-    }
-
-    data_dict = {
-        "all_scalograms": ["labels_path", "data_path"], # need to find out what these actually are
-        "averaged_scalograms": ["labels_path", "data_path"]
     }
 
     sweep_config = {
@@ -51,25 +47,27 @@ def main():
     wandb.login(key=wandb_key)
     sweep_id = wandb.sweep(sweep_config, project=f"{args.model_type}_KFold_HyperSweep")
 
-    data = args.dataset 
-    dataset = AlexNetDataHandler(csv_file=data_dict[data][0],
-                               img_directory=data_dict[data][1]
+    labels_csv = args.labels
+    image_directory = args.data_dir
+    dataset = AlexNetDataHandler(csv_file=labels_csv,
+                               img_directory=image_directory
                                )
 
     model_class = model_dict[args.model_type]
     device = "cuda" if torch.cuda.is_available() else "cpu"
     freeze_type = args.freeze_type
 
+    # change later, just want to test it out for now. 
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
                     model_type=args.model_type,
                     dataset=dataset, 
                     model_class=model_class, 
                     device=device,
-                    k=10,
+                    k=1,
                     freeze_type=freeze_type
                 ),
-                count=10)
+                count=1)
 
 
 if __name__ == "__main__":
