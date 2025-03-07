@@ -18,13 +18,12 @@ def main():
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
     parser.add_argument('--data_dir', type=str, required=True, help="path to image directory you want to train on") #update as needed
-    parser.add_argument('--wandb_key', type=str, required=True, help="Wandb api key for tracking login") 
 
     args = parser.parse_args()
 
     model_dict = {
         "AlexNetFinalOnly": AlexNetMPSFinalOnly,
-        "AlexNetSuddenDescend": AlexNetMPSDescend,
+        "AlexNetDescend": AlexNetMPSDescend,
         "AlexNetLongDescend" : AlexNetMPSLongDescend,
         "AlexNetSuddenDescend": AlexNetMPSSuddenDescend
     }
@@ -43,10 +42,8 @@ def main():
         "min_iter": 15
     }
 }
-    wandb_key = args.wandb_key
-    wandb.login(key=wandb_key)
+    wandb.login() # login api key stored in env var
     sweep_id = wandb.sweep(sweep_config, project=f"{args.model_type}_KFold_HyperSweep")
-
     labels_csv = args.labels
     image_directory = args.data_dir
     dataset = AlexNetDataHandler(csv_file=labels_csv,

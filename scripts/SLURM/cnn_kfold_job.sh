@@ -1,0 +1,59 @@
+#!/bin/bash
+#SBATCH --job-name=cnn_train
+#SBATCH --output=logs/output_%j.log
+#SBATCH --error=logs/error_%j.log
+#SBATCH --partition=gpu
+#SBATCH --qos=ultrafast
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task:8
+#SBATCH --mem:50000 #50GB
+
+# load cuda
+module load cuda/12.8
+
+source training_env_config.sh
+
+# loading model config
+MODEL_CONFIG_FILE="$1"
+
+if [ -z "$MODEL_CONFIG_FILE" ]; then
+    echo "ERROR: No config file provided! Usage: sbatch coefficient_array_job.sh <config_file>"
+    exit 1
+fi
+
+
+# Load config file
+if [ -f "$MODEL_CONFIG_FILE" ]; then
+    source "$MODEL_CONFIG_FILE"
+    echo "Loaded config: $MODEL_CONFIG_FILE"
+else
+    echo "ERROR: Config file $MODEL_CONFIG_FILE not found!"
+    exit 1
+fi
+
+# Activate venv
+if [ -f "$HOME/venvs/modeltraining/bin/activate" ]; then
+    source "$HOME/venvs/modeltraining/bin/activate"
+    echo "Virtual environment activated"
+else
+    echo "ERROR: Virtual environment not found or failed to activate."
+    exit 1
+fi
+
+# Debugging output
+echo "MODEL_TYPE: $MODEL_TYPE"
+echo "FREEZE_TYPE: $FREEZE_TYPE"
+echo "LABELS: $LABELS"
+echo "DATA_DIR: $DATA_DIR"
+if [[ -n "$WANDB_KEY" ]]; then
+    echo "WANDB_KEY set"
+else
+    echo "WANDB_KEY not set!"
+fi
+
+# set pythonpath so we can import the custom modules
+export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
+echo "Python path: $PYTHONPATH"
+
+python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --labels --data_dir --wandb_key $WANDB_KEY
+

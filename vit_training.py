@@ -1,7 +1,7 @@
 import argparse
 import wandb
 import torch
-
+from huggingface_hub import login
 
 ## custom imports 
 
@@ -17,7 +17,6 @@ def main():
     parser.add_argument('--sweep_name', type=str, required=True, help="Name of the sweep")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
     parser.add_argument('--dataset', type=str, required=True, help="the dataset you want to train on")
-    parser.add_argument('--wandb_key', type=str, required=True, help="Wandb API key")
 
 
     args = parser.parse_args()
@@ -43,10 +42,16 @@ def main():
     }
 
 
-    wandb_key = args.wandb_key
-    wandb.login(key=wandb_key)
+    wandb.login() # key stored as env var
     sweep_name = args.sweep_name
     sweep_id = wandb.sweep(sweep_config, project=sweep_name)
+
+    hf_token = os.get_env("HF_TOKEN")
+    if hf_token:
+        login(token=hf_token)
+        print("login succesful")
+    else:
+        print("not logged in to HF!")
 
     data = args.dataset
     data_handler = ViTDataHandler(label_path=data_dict[data][0], 

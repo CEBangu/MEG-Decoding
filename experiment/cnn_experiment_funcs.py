@@ -1,6 +1,7 @@
 import torch.optim as optim 
 import torch
 import wandb
+import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
@@ -204,9 +205,10 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
     This function handles the wandb parameter sweep for a given cnn model architecture
 
     """
-    
+    wandb_dir = os.get_env("WANDB_DIR")
     run = wandb.init(
         project=f"{model_type}_KFold_HyperSweep",
+        dir=wandb_dir
     )
     config = wandb.config
     group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}"
@@ -242,6 +244,12 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
         model = model_class().to(device=device)
         # model.reset_parameters()
         model.freeze_type(freeze_type=freeze_type)
+
+        # Honestly, the models at this stage are pretty small so actually parallelizing them will probably be slower       
+        # # Distributed GPU training
+        # if torch.cuda.device_count() > 1:
+        #     print(f"Using {torch.cuda.device_count()} GPUs")
+        #     model = nn.DataParallel(model)
 
         optimizer = get_optimizer(name=config.optimizer, 
                                   model=model, 
