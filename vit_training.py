@@ -38,7 +38,7 @@ def main():
 
 
     wandb.login() # key stored as env var
-    sweep_id = wandb.sweep(sweep_config, project=f"{args.model_path}_KFold_HyperSweep")
+    sweep_id = wandb.sweep(sweep_config, project=f"VIT_KFold_HyperSweep")
 
     hf_token = os.get_env("HF_TOKEN")
     if hf_token:
