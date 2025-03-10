@@ -48,12 +48,12 @@ def main():
     else:
         print("not logged in to HF!")
 
-    data_handler = ViTDataHandler(label_path=args.labels, 
+    dataset = ViTDataHandler(label_path=args.labels, 
                              image_path=args.data_dir,
                              processor_path=args.model_path)
 
-    dataset = data_handler.dataset
-    processor = data_handler.processor
+
+    processor = dataset.processor
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     freeze_type = args.freeze_type

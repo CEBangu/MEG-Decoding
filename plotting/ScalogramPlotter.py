@@ -24,7 +24,7 @@ class ScalogramPlotter:
         self.figsize= (8, 8) # this is just the standard
 
         # Error handling
-        if len(index_list) > dimensions[0] * dimensions[1]:
+        if len(index_list) > dimensions[0] * dimensions[1] and not self.average:
             raise ValueError("Number of indices in index_list should not exceed the number of subplots in the figure. Number of subplots MAY exceed the number of indices in index_list.")
         
         if not os.path.exists(save_dir):
@@ -81,7 +81,7 @@ class ScalogramPlotter:
         fig, axes = plt.subplots(figsize=self.figsize)
         
         average = np.mean(np.abs(coefficients), axis=0)
-        axes.pcolormesh(average)
+        axes.pcolormesh(average, cmap=self.cmap)
         axes.set_xticks([])
         axes.set_yticks([])
         axes.spines['top'].set_visible(False)

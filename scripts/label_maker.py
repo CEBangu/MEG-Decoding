@@ -10,6 +10,7 @@ def main():
     parser.add_argument('--data_dir', type=str, required=True, help='directory the data is located in')
     parser.add_argument('--save_dir', type=str, required=True, help='directory you want to save the labels in')
     parser.add_argument('--res_dims', type=str, required=True, help='resolution and dimensions of the data contained, ie 224_16x16')
+    parser.add_argument('--producing_only', action="store_true", help='make labels only for producing samples')
 
     args = parser.parse_args()
     
@@ -17,9 +18,15 @@ def main():
     vowels = {'a': 0, 'e': 1, 'i': 2}
 
     # combining vowels and consonants, but labeled by vowels
-    scalogram_files = os.listdir(args.data_dir)
-    csv_file = os.path.join(args.save_dir, f'combined_labels_{args.res_dims}_all.csv')
     
+    if args.producing_only:
+        csv_file = os.path.join(args.save_dir, f'combined_labels_{args.res_dims}_producing_only.csv')
+    else:
+        csv_file = os.path.join(args.save_dir, f'combined_labels_{args.res_dims}_all.csv')
+    
+    scalogram_files = os.listdir(args.data_dir)
+    if args.producing_only:
+        scalogram_files = [f for f in scalogram_files if (len(f.split('_')[4]) >= 3)]
 
     with open(csv_file, mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -40,7 +47,10 @@ def main():
 
     # Vowels only
     # All first then vowlels only
-    csv_file = os.path.join(args.save_dir, f'vowels_only_labels_{args.res_dims}.csv')
+    if args.producing_only:
+        csv_file = os.path.join(args.save_dir, f'vowels_only_labels_{args.res_dims}_producing_only.csv')
+    else:
+        csv_file = os.path.join(args.save_dir, f'vowels_only_labels_{args.res_dims}.csv')
 
     with open(csv_file, mode='w', newline='') as file:
         writer = csv.writer(file)

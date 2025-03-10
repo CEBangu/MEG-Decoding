@@ -13,7 +13,8 @@ class MEGVisionTransformer(ViTForImageClassification):
         super().__init__(*args, **kwargs) # parent init
 
     def forward(self, pixel_values=None, labels=None, **kwargs):
-        """Custom forward pass because we need positional interpolation"""
+        """Custom forward pass because we need positional interpolation and extra kwarg"""
+        kwargs.pop("num_items_in_batch", None)
         return super().forward(
             pixel_values=pixel_values,
             labels=labels,

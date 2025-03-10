@@ -1,6 +1,7 @@
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import Trainer, TrainingArguments
+from torch.utils.data import Subset
 import numpy as np
 import torch
 import wandb
@@ -13,6 +14,7 @@ from models.ViTCallbacks import FoldEvalTrackingCallback, TrainMetricsCallback
 
 def collate_fn(examples):
     """This function gets the samples in the right format for the model"""
+    print(f"Batching {len(examples)} examples") #debugging
     pixel_values = torch.stack([example["pixel_values"] for example in examples])
     labels = torch.tensor([example["label"] for example in examples])
     return {"pixel_values": pixel_values, "labels": labels}
@@ -107,21 +109,28 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
         model.freeze_type(freeze_type)
 
         # splitting into train and val
-        train_subset = train_dataset.select(train_idx.tolist())
-        val_subset = train_dataset.select(val_idx.tolist())
+        train_subset = Subset(train_dataset, train_idx.tolist())
+        val_subset = Subset(train_dataset, val_idx.tolist())
+
+        print(f"train size: {len(train_subset)}")
+        print(f"val size: {len(val_subset)}")
+
+
         training_args = TrainingArguments(
             output_dir=hf_output_dir,
             seed=42,
             remove_unused_columns=False,
             eval_strategy="epoch", #maybe epoch is better?
             save_strategy="epoch",
+            fp16=True,
+            max_grad_norm=1.0, #gradient clippping
             learning_rate=config.learning_rate, # take it from the wandb config
             lr_scheduler_type=config.lr_scheduler_type, # take from config
             optim=config.optimizer, # tune optimizer
             gradient_accumulation_steps=config.gradient_accumulation_steps, #tune gradient accumulation
-            per_device_train_batch_size=32, # IMPORTANT
-            per_device_eval_batch_size=16, # IMPORTANT
-            num_train_epochs=80, # IMPORTANT
+            per_device_train_batch_size=128, # IMPORTANT
+            per_device_eval_batch_size=128, # IMPORTANT
+            num_train_epochs=50, # IMPORTANT
             warmup_ratio=0.1,
             logging_steps=10, # change to more later
             metric_for_best_model='eval_loss',
