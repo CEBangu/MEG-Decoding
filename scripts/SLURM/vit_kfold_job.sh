@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=cnn_train
+#SBATCH --job-name=vit_train
 #SBATCH --output=logs/output_%j.log
 #SBATCH --error=logs/error_%j.log
 #SBATCH --partition=dedicatedgpu
