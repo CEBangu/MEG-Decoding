@@ -1,6 +1,7 @@
 import argparse
 import wandb
 import torch
+import os
 from huggingface_hub import login
 
 ## custom imports 
@@ -27,7 +28,7 @@ def main():
         "parameters": {
             "learning_rate": {"values": [1e-5, 3e-5, 5e-5, 1e-4]}, # sweep learning rates (we'll see how many we can do)
             "lr_scheduler_type": {"values": ["linear", "cosine", "constant"]},
-            "optim": {"values": ["adamw_torch", "adamw_hf", "adafactor"]}, # have to consider this some more
+            "optimizer": {"values": ["adamw_torch", "adamw_hf", "adafactor"]}, # have to consider this some more
             "gradient_accumulation_steps": {"values": [1, 4, 8]}, # does this really matter?
             },
             "early_terminate": {
@@ -40,7 +41,7 @@ def main():
     wandb.login() # key stored as env var
     sweep_id = wandb.sweep(sweep_config, project=f"VIT_KFold_HyperSweep")
 
-    hf_token = os.get_env("HF_TOKEN")
+    hf_token = os.getenv("HF_TOKEN")
     if hf_token:
         login(token=hf_token)
         print("login succesful")
@@ -70,7 +71,7 @@ def main():
                     freeze_type=args.freeze_type,
                     k=k
                 ),
-                count=10
+                count=10 # number of hyperparameters to search over
                 )
     
 if __name__ == "__main__":

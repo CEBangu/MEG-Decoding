@@ -66,7 +66,7 @@ def main():
                     k=k,
                     freeze_type=freeze_type
                 ),
-                count=1)
+                count=1) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":

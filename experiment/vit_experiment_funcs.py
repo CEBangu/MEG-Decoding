@@ -1,17 +1,19 @@
-from models.ViTCallbacks import FoldEvalTrackingCallback, TrainMetricsCallback
-import torch
-from experiment import accuracy_metric, f1_metric, precision_metric, recall_metric
-import numpy as np
-import wandb
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import Trainer, TrainingArguments
+import numpy as np
+import torch
+import wandb
+import os
 
+# custom imports 
+from experiment import accuracy_metric, f1_metric, precision_metric, recall_metric
+from models.ViTCallbacks import FoldEvalTrackingCallback, TrainMetricsCallback
 
 
 def collate_fn(examples):
     """This function gets the samples in the right format for the model"""
-    pixel_values = torch.stack([torch.tensor(example["pixel_values"]) for example in examples])
+    pixel_values = torch.stack([example["pixel_values"] for example in examples])
     labels = torch.tensor([example["label"] for example in examples])
     return {"pixel_values": pixel_values, "labels": labels}
 
@@ -78,11 +80,11 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
 
     #wandb configuration setup. 
     run=wandb.init(
-        project=f"{model_name}-KFold-HyperSweep",
-        wandb_dir=wandb_dir,
+        project=f"Google_ViT-KFold-HyperSweep",
+        dir=wandb_dir,
     )
-    config=wandb.config if config is None else config
-    group_name = f"ViT_lr:{config.learning_rate}_optim:{config.optim}_sched:{config.lr_scheduler_type}_grads:{config.gradient_accumulation_steps}"
+    config=wandb.config
+    group_name = f"ViT_lr:{config.learning_rate}_optim:{config.optimizer}_sched:{config.lr_scheduler_type}_grads:{config.gradient_accumulation_steps}"
     # Optionally, set tags or name here:
     run.name = group_name
 
@@ -108,24 +110,23 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
         train_subset = train_dataset.select(train_idx.tolist())
         val_subset = train_dataset.select(val_idx.tolist())
         training_args = TrainingArguments(
-            f"{model_name}-finetune_test",
+            output_dir=hf_output_dir,
             seed=42,
             remove_unused_columns=False,
             eval_strategy="epoch", #maybe epoch is better?
             save_strategy="epoch",
             learning_rate=config.learning_rate, # take it from the wandb config
             lr_scheduler_type=config.lr_scheduler_type, # take from config
-            optim=config.optim, # tune optimizer
+            optim=config.optimizer, # tune optimizer
             gradient_accumulation_steps=config.gradient_accumulation_steps, #tune gradient accumulation
-            per_device_train_batch_size=1,
-            per_device_eval_batch_size=1, 
-            num_train_epochs=80, # SUPER IMPORTANT
+            per_device_train_batch_size=32, # IMPORTANT
+            per_device_eval_batch_size=16, # IMPORTANT
+            num_train_epochs=80, # IMPORTANT
             warmup_ratio=0.1,
             logging_steps=10, # change to more later
             metric_for_best_model='eval_loss',
             report_to="wandb",
             push_to_hub=False,
-            output_dir=hf_output_dir,
             logging_dir=hf_output_dir,
         )
         trainer = Trainer(
