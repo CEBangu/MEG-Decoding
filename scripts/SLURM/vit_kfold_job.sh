@@ -54,5 +54,5 @@ echo "DATA_DIR: $DATA_DIR"
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-python3 $HOME/MEG-Decoding/cnn_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
+python3 $HOME/MEG-Decoding/vit_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
 
