@@ -14,7 +14,6 @@ from models.ViTCallbacks import FoldEvalTrackingCallback, TrainMetricsCallback
 
 def collate_fn(examples):
     """This function gets the samples in the right format for the model"""
-    print(f"Batching {len(examples)} examples") #debugging
     pixel_values = torch.stack([example["pixel_values"] for example in examples])
     labels = torch.tensor([example["label"] for example in examples])
     return {"pixel_values": pixel_values, "labels": labels}
@@ -73,7 +72,7 @@ def vit_compute_metrics(eval_pred, num_classes=3):
         "specificity": avg_specificity,
     }
 
-def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_name, num_classes=3, config=None, freeze_type=None, k=10):
+def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_name, num_classes=3, config=None, freeze_type=None, k=10, project_name=None):
     """Train dataset has to be dataset["train"]
     Unlike with the CNN, the trainer handles the training/validation loop here
     """
@@ -81,10 +80,16 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
     hf_output_dir = os.getenv("HF_OUTPUT_DIR")
 
     #wandb configuration setup. 
+    if project_name is None:
+        project = "Google_ViT-KFold-HyperSweep"
+    else:
+        project = project_name
+
     run=wandb.init(
-        project=f"Google_ViT-KFold-HyperSweep",
+        project=project,
         dir=wandb_dir,
     )
+
     config=wandb.config
     group_name = f"ViT_lr:{config.learning_rate}_optim:{config.optimizer}_sched:{config.lr_scheduler_type}_grads:{config.gradient_accumulation_steps}"
     # Optionally, set tags or name here:
@@ -111,9 +116,6 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
         # splitting into train and val
         train_subset = Subset(train_dataset, train_idx.tolist())
         val_subset = Subset(train_dataset, val_idx.tolist())
-
-        print(f"train size: {len(train_subset)}")
-        print(f"val size: {len(val_subset)}")
 
 
         training_args = TrainingArguments(

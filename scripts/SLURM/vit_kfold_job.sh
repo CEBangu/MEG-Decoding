@@ -24,7 +24,6 @@ if [ -z "$MODEL_CONFIG_FILE" ]; then
     exit 1
 fi
 
-
 # Load config file
 if [ -f "$MODEL_CONFIG_FILE" ]; then
     source "$MODEL_CONFIG_FILE"
@@ -49,10 +48,11 @@ echo "FREEZE_TYPE: $FREEZE_TYPE"
 echo "NUM_FOLDS: $NUM_FOLDS"
 echo "LABELS: $LABELS"
 echo "DATA_DIR: $DATA_DIR"
+echo "PROJECT_NAME: $PROJECT_NAME"
 
 # set pythonpath so we can import the custom modules
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-python3 $HOME/MEG-Decoding/vit_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
+python3 $HOME/MEG-Decoding/vit_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --project_name $PROJECT_NAME --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
 
