@@ -198,20 +198,26 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
 
         best_val_acc = max(best_val_acc, 100.0 * val_correct / val_total)
 
-    return np.mean(fold_val_losses)  # This should really return the model weights or something
+    return np.mean(fold_val_losses)  # Is this the right return?
 
 
 
-def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
+def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, project_name=None):
     """
     This function handles the wandb parameter sweep for a given cnn model architecture
 
     """
+    if project_name is None:
+        project_name = f"{model_type}_KFold_HyperSweep"
+    else:
+        project_name = project_name
     wandb_dir = os.getenv("WANDB_DIR")
+    
     run = wandb.init(
-        project=f"{model_type}_KFold_HyperSweep",
+        project=project_name,
         dir=wandb_dir
     )
+
     config = wandb.config
     group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}"
     run.name = group_name
@@ -274,7 +280,7 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type):
                                        val_loader=val_loader, 
                                        criterion=criterion, 
                                        optimizer=optimizer, 
-                                       num_epochs=80, # can mess around with this
+                                       num_epochs=20, # can mess around with this
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)

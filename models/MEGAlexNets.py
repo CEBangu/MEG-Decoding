@@ -75,7 +75,7 @@ class LayerFreezeMixin:
 
 # Models
 
-class AlexNetMPSFinalOnly(nn.Module, LayerFreezeMixin):
+class AlexNetFinalOnly(nn.Module, LayerFreezeMixin):
     def __init__(self):
         super().__init__()
         pretrained =  models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
@@ -99,7 +99,7 @@ class AlexNetMPSFinalOnly(nn.Module, LayerFreezeMixin):
         return x
     
 
-class AlexNetMPSSuddenDescend(nn.Module, LayerFreezeMixin):
+class AlexNetSuddenDescend(nn.Module, LayerFreezeMixin):
     def __init__(self):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
@@ -129,7 +129,7 @@ class AlexNetMPSSuddenDescend(nn.Module, LayerFreezeMixin):
         x = self.classifier(x)
         return x
 
-class AlexNetMPSLongDescend(nn.Module, LayerFreezeMixin):
+class AlexNetLongDescend(nn.Module, LayerFreezeMixin):
     def __init__(self):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
@@ -166,7 +166,7 @@ class AlexNetMPSLongDescend(nn.Module, LayerFreezeMixin):
         return x
 
 
-class AlexNetMPSDescend(nn.Module, LayerFreezeMixin):
+class AlexNetDescend(nn.Module, LayerFreezeMixin):
     def __init__(self):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)

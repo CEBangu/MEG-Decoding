@@ -6,7 +6,7 @@ import torch
 ## custom imports
 
 from datahandling import AlexNetDataHandler
-from models.MEGAlexNets import AlexNetMPSDescend, AlexNetMPSFinalOnly, AlexNetMPSLongDescend, AlexNetMPSSuddenDescend
+from models.MEGAlexNets import AlexNetDescend, AlexNetFinalOnly, AlexNetLongDescend, AlexNetSuddenDescend
 from experiment import cnn_sweep_train
 
 
@@ -17,16 +17,17 @@ def main():
     parser.add_argument('--model_type', type=str, required=True, help="The model architecture you want to train")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
     parser.add_argument('--num_folds', type=int, required=True, help="how many k folds")
+    parser.add_argument('--project_name', type=str, default=None, help="project name")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
     parser.add_argument('--data_dir', type=str, required=True, help="path to image directory you want to train on") #update as needed
 
     args = parser.parse_args()
 
     model_dict = {
-        "AlexNetFinalOnly": AlexNetMPSFinalOnly,
-        "AlexNetDescend": AlexNetMPSDescend,
-        "AlexNetLongDescend" : AlexNetMPSLongDescend,
-        "AlexNetSuddenDescend": AlexNetMPSSuddenDescend
+        "AlexNetFinalOnly": AlexNetFinalOnly,
+        "AlexNetDescend": AlexNetDescend,
+        "AlexNetLongDescend" : AlexNetLongDescend,
+        "AlexNetSuddenDescend": AlexNetSuddenDescend
     }
 
     sweep_config = {
@@ -34,7 +35,7 @@ def main():
     "metric": {"name": "avg_val_loss", "goal": "minimize"},
     "parameters": {
         "learning_rate": {"values": [1e-4, 3e-4, 1e-3]},
-        "batch_size": {"values": [32, 64]},
+        "batch_size": {"values": [64, 128]},
         "optimizer": {"values": ["adam", "sgd"]},
         "weight_decay": {"values": [0.0, 1e-4, 1e-3]} # regularization - do we really need this?
     },
@@ -44,7 +45,7 @@ def main():
     }
 }
     wandb.login() # login api key stored in env var
-    sweep_id = wandb.sweep(sweep_config, project=f"{args.model_type}_KFold_HyperSweep")
+    sweep_id = wandb.sweep(sweep_config, project=args.project_name)
     labels_csv = args.labels
     image_directory = args.data_dir
     dataset = AlexNetDataHandler(csv_file=labels_csv,
@@ -64,9 +65,10 @@ def main():
                     model_class=model_class, 
                     device=device,
                     k=k,
-                    freeze_type=freeze_type
+                    freeze_type=freeze_type,
+                    project_name=args.project_name
                 ),
-                count=1) # need to change the number of hyperparameters searched over.
+                count=2) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":
