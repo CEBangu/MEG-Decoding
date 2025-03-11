@@ -81,12 +81,12 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
 
     #wandb configuration setup. 
     if project_name is None:
-        project = "Google_ViT-KFold-HyperSweep"
+        project_name = "Google_ViT-KFold-HyperSweep"
     else:
-        project = project_name
+        project_name = project_name
 
     run=wandb.init(
-        project=project,
+        project=project_name,
         dir=wandb_dir,
     )
 
