@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use("Agg") # NON GUI
+# matplotlib.use("Agg") # NON GUI
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -43,19 +43,19 @@ class ScalogramPlotter:
             figsize=(self.figsize))
         
         ax = np.array(ax, ndmin=2) # otherwise parser complains - might ahve to revisit this though
-        
+        subplot_index = 0
         for channel_index, channel in enumerate(coefficients):
             # check if the channel index is in the index list in case you don't want to plot all of them.
             if channel_index in self.index_list:
                 # plots them as a square grid
-                r, c = divmod(channel_index, self.dimensions[0])
+                r, c = divmod(subplot_index, self.dimensions[0])
                 ax[r, c].pcolormesh(channel, cmap=self.cmap)
                 ax[r, c].set_xticks([])
                 ax[r, c].set_yticks([])
-            
+                subplot_index += 1
         # in case there are not enough channels to fill the grid, fill with 0s
-        if coefficients.shape[0] < self.dimensions[0]*self.dimensions[1]:
-            for channel_index in range(coefficients.shape[0], self.dimensions[0]*self.dimensions[1]):
+        if subplot_index < self.dimensions[0]*self.dimensions[1]:
+            for channel_index in range(subplot_index, self.dimensions[0]*self.dimensions[1]):
                 print(f"plotting 0s for channel index: {channel_index}")
                 r, c = divmod(channel_index, self.dimensions[0])
                 ax[r, c].pcolormesh(np.zeros_like(channel), cmap=self.cmap)
