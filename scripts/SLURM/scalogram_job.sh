@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1       
 #SBATCH --cpus-per-task=8  # Or adjust as needed
-#SBATCH --mem=24000
+#SBATCH --mem=10000
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr
 #SBATCH --array=0-20       # 21 tasks
@@ -23,6 +23,8 @@ source "$CONFIG_FILE"
 
 # Activate virtual environment
 source "$HOME/venvs/scalograms/bin/activate"
+
+mkdir -p "$SAVE_DIR"
 
 # Run Python script with epoch_workers=4 (or change as needed)
 srun python3 $HOME/MEG-Decoding/plotting_script.py \
