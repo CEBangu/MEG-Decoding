@@ -9,17 +9,17 @@ def main():
     parser = ArgumentParser(description="This script takes the labels and makes train_validation_test splits for the data in quesiton")
 
     parser.add_argument('--dimensions', type=str, required=True, help="the dimensions, formatted like they are in the labels file")
-    parser.add_argument('--data_path', type=str, required=True, help="Path to where the label csvs are")
+    parser.add_argument('--data_dir', type=str, required=True, help="Path to where the label csvs are")
     parser.add_argument('--output_path', type=str, required=True, help="path where the output csvs will be stored")
     
     args = parser.parse_args()
 
-    label_files = os.listdir(args.data_path)
+    label_files = os.listdir(args.data_dir)
     
     for f in label_files:
 
         print(f"processing {f}")
-        df = pd.read_csv(os.path.join(args.data_path, f)).reset_index(drop=True)
+        df = pd.read_csv(os.path.join(args.data_dir, f)).reset_index(drop=True)
 
         total_samples = len(df)
         print(f"Total samples: {total_samples}")

@@ -280,7 +280,7 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
                                        val_loader=val_loader, 
                                        criterion=criterion, 
                                        optimizer=optimizer, 
-                                       num_epochs=20, # can mess around with this
+                                       num_epochs=40, # can mess around with this
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)
