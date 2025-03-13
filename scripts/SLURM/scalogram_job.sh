@@ -25,6 +25,8 @@ source "$CONFIG_FILE"
 source "$HOME/venvs/scalograms/bin/activate"
 
 mkdir -p "$SAVE_DIR"
+mkdir -p "$LABEL_DIR"
+mkdir -p "$TRAIN_TEST_DIR"
 
 # Run Python script with epoch_workers=4 (or change as needed)
 srun python3 $HOME/MEG-Decoding/plotting_script.py \

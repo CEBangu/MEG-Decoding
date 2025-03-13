@@ -37,11 +37,10 @@ def main():
         "learning_rate": {"values": [1e-4, 3e-4, 1e-3]},
         "batch_size": {"values": [64, 128]},
         "optimizer": {"values": ["adam", "sgd"]},
-        "weight_decay": {"values": [0.0, 1e-4, 1e-3]} # regularization - do we really need this?
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
-        "min_iter": 15
+        "min_iter": 5
     }
 }
     wandb.login() # login api key stored in env var
@@ -68,7 +67,7 @@ def main():
                     freeze_type=freeze_type,
                     project_name=args.project_name
                 ),
-                count=2) # need to change the number of hyperparameters searched over.
+                count=3) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":

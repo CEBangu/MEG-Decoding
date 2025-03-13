@@ -34,7 +34,7 @@ def main():
             },
             "early_terminate": {
                 "type": "hyperband", # stop runs early
-                "min_iter": 15,
+                "min_iter": 5,
             }
     }
 
@@ -71,7 +71,7 @@ def main():
                     k=args.num_folds,
                     project_name=args.project_name
                 ),
-                count=10 # number of hyperparameters to search over
+                count=3 # number of hyperparameters to search over
                 )
     
 if __name__ == "__main__":

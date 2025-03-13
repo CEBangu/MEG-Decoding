@@ -32,3 +32,4 @@ __pycache__/
 model_download.py
 /thesis
 /co_registration
+labels_train_test.py

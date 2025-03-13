@@ -8,9 +8,10 @@ from argparse import ArgumentParser
 def main():
     parser = ArgumentParser(description="This script takes the labels and makes train_validation_test splits for the data in quesiton")
 
-    parser.add_argument('--dimensions', type=str, required=True, help="the dimensions, formatted like they are in the labels file")
     parser.add_argument('--data_dir', type=str, required=True, help="Path to where the label csvs are")
-    parser.add_argument('--output_path', type=str, required=True, help="path where the output csvs will be stored")
+    parser.add_argument('--save_dir', type=str, required=True, help="path where the output csvs will be stored")
+    parser.add_argument('--dimensions', type=str, required=True, help="the dimensions, formatted like they are in the labels file")
+    
     
     args = parser.parse_args()
 
@@ -68,8 +69,8 @@ def main():
             filename_train = f'{unpacked_filename[0]}_all_{args.dimensions}_Kfold_train.csv'
             filename_test = f'{unpacked_filename[0]}_all_{args.dimensions}_test.csv'
 
-        df.to_csv(os.path.join(args.output_path, filename_train), index=False)  # 90% of data
-        test_df.to_csv(os.path.join(args.output_path, filename_test), index=False)    # 10% of data
+        df.to_csv(os.path.join(args.save_dir, filename_train), index=False)  # 90% of data
+        test_df.to_csv(os.path.join(args.save_dir, filename_test), index=False)    # 10% of data
 
         print(f"Training set: {len(df)} samples")
         print(f"Test set: {len(test_df)} samples")
