@@ -6,7 +6,7 @@
 #SBATCH --qos=fast
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=10000 #10GB
+#SBATCH --mem=8000 #10GB
 #SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr # email
 

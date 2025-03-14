@@ -132,8 +132,8 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
             gradient_accumulation_steps=config.gradient_accumulation_steps, #tune gradient accumulation
             per_device_train_batch_size=128, # IMPORTANT
             per_device_eval_batch_size=128, # IMPORTANT
-            num_train_epochs=20, # IMPORTANT
-            warmup_ratio=0.1,
+            num_train_epochs=40, # IMPORTANT
+            warmup_ratio=0.01,
             logging_steps=10, # change to more later
             metric_for_best_model='eval_loss',
             report_to="wandb",

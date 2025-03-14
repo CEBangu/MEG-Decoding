@@ -25,7 +25,7 @@ def main():
 
     sweep_config = {
         "method": "bayes",
-        "metric": {"name": "avg_eval_loss", "goal": "minimize"}, # we want to optimize the average eval loss accross folds
+        "metric": {"name": "f1", "goal": "maximize"}, # we want to optimize the average eval loss accross folds
         "parameters": {
             "learning_rate": {"values": [1e-5, 3e-5, 5e-5, 1e-4]}, # sweep learning rates (we'll see how many we can do)
             "lr_scheduler_type": {"values": ["linear", "cosine", "constant"]},
@@ -68,7 +68,7 @@ def main():
                     num_classes=3,
                     config=sweep_config,
                     freeze_type=args.freeze_type,
-                    k=args.num_folds,
+                    k=3, #args.num_folds,
                     project_name=args.project_name
                 ),
                 count=3 # number of hyperparameters to search over

@@ -32,11 +32,12 @@ def main():
 
     sweep_config = {
     "method": "bayes",
-    "metric": {"name": "avg_val_loss", "goal": "minimize"},
+    "metric": {"name": "f1", "goal": "maximize"}, # changed from validation loss to f1
     "parameters": {
         "learning_rate": {"values": [1e-4, 3e-4, 1e-3]},
         "batch_size": {"values": [64, 128]},
         "optimizer": {"values": ["adam", "sgd"]},
+        "weight_decay": {"values": [0.0]}, # no more weight decay but it's super anoying to change it everywhere. 
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
@@ -56,7 +57,7 @@ def main():
     freeze_type = args.freeze_type
 
     # change later, just want to test it out for now. 
-    k = args.num_folds
+    k = 3 #args.num_folds
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
                     model_type=args.model_type,
@@ -67,7 +68,7 @@ def main():
                     freeze_type=freeze_type,
                     project_name=args.project_name
                 ),
-                count=3) # need to change the number of hyperparameters searched over.
+                count=5) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":
