@@ -2,11 +2,11 @@
 #SBATCH --job-name=cnn_train
 #SBATCH --output=logs/output_%j.log
 #SBATCH --error=logs/error_%j.log
-#SBATCH --partition=dedicatedgpu
+#SBATCH --partition=gpu #from dedicatedgpu
 #SBATCH --qos=fast
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=8000 #24GB
+#SBATCH --mem=8000 #8GB
 #SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr # email
 
