@@ -28,7 +28,7 @@ def get_optimizer(name, model, lr, weight_decay):
     if name == "adamw_torch":
         return optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif name == "sgd":
-        return optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=weight_decay)
+        return optim.SGD(model.parameters(), lr=lr, momentum=0.95, weight_decay=weight_decay)
     elif name == "adam":
         return optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif name == "rmsprop":
@@ -256,9 +256,12 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
 
         unique_train_labels, train_counts = np.unique(np.array(train_labels), return_counts=True)
         unique_val_labels, val_counts = np.unique(np.array(val_labels), return_counts=True)
-
-        print("Train label distribution:", dict(zip(unique_train_labels, train_counts)))
-        print("Validation label distribution:", dict(zip(unique_val_labels, val_counts)))
+        lables = dict(zip(unique_train_labels, train_counts))
+        amounts = [amount for _, amount in labels.items()]
+        chance_level = max(amounts)/sum(amounts) * 100
+        print("Train label distribution:", labels)
+        print("Validation label distribution:", labels)
+        print("Chance level:", chance_level)
 
         model = model_class().to(device=device)
         # model.reset_parameters()
@@ -280,7 +283,7 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
                                        val_loader=val_loader, 
                                        criterion=criterion, 
                                        optimizer=optimizer, 
-                                       num_epochs=60, # for the smaller datasets, 40 is not enough
+                                       num_epochs=160, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)

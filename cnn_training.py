@@ -34,10 +34,10 @@ def main():
     "method": "bayes",
     "metric": {"name": "f1", "goal": "maximize"}, # changed from validation loss to f1
     "parameters": {
-        "learning_rate": {"values": [1e-4, 3e-4, 1e-3]},
+        "learning_rate": {"values": [1e-6]}, #]},
         "batch_size": {"values": [64, 128]},
-        "optimizer": {"values": ["adam", "sgd"]},
-        "weight_decay": {"values": [0.0]}, # no more weight decay but it's super anoying to change it everywhere. 
+        "optimizer": {"values": ["adam"]}, #"rmsprop", "adamw_torch"]},
+        "weight_decay": {"values": [1e-5]}, #1e-2, 1e-3]}, # let's try some weight decay
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
@@ -57,7 +57,7 @@ def main():
     freeze_type = args.freeze_type
 
     # change later, just want to test it out for now. 
-    k = 3 #args.num_folds
+    k = 2 #args.num_folds
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
                     model_type=args.model_type,

@@ -117,6 +117,26 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
         train_subset = Subset(train_dataset, train_idx.tolist())
         val_subset = Subset(train_dataset, val_idx.tolist())
 
+        train_labels = [train_dataset[idx]["label"] for idx in train_idx]
+        val_labels = [train_dataset[idx]["label"] for idx in val_idx]
+
+        # Count label occurrences
+        train_label_counts = Counter(train_labels)
+        val_label_counts = Counter(val_labels)
+        
+        chance_accuracy = max(val_label_counts.values())/sum(val_label_counts.values()) 
+
+        # Print class distributions
+        print("Train Set Label Distribution:")
+        for label, count in sorted(train_label_counts.items()):
+            print(f"Class {label}: {count} samples")
+
+        print("Validation Set Label Distribution:")
+        for label, count in sorted(val_label_counts.items()):
+            print(f"Class {label}: {count} samples")
+
+        # Print chance accuracy level
+        print(f"Chance Accuracy Level for Fold {fold + 1}: {chance_accuracy:.2%}") 
 
         training_args = TrainingArguments(
             output_dir=hf_output_dir,
@@ -125,16 +145,16 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
             eval_strategy="epoch", #maybe epoch is better?
             save_strategy="epoch",
             fp16=True,
-            max_grad_norm=1.0, #gradient clippping
+            # max_grad_norm=1.0, #gradient clippping
             learning_rate=config.learning_rate, # take it from the wandb config
             lr_scheduler_type=config.lr_scheduler_type, # take from config
             optim=config.optimizer, # tune optimizer
             gradient_accumulation_steps=config.gradient_accumulation_steps, #tune gradient accumulation
             per_device_train_batch_size=128, # IMPORTANT
             per_device_eval_batch_size=128, # IMPORTANT
-            num_train_epochs=40, # IMPORTANT
-            warmup_ratio=0.01,
-            logging_steps=10, # change to more later
+            num_train_epochs=20, # IMPORTANT
+            warmup_ratio=0.001,
+            logging_steps=1, # change to more later
             metric_for_best_model='eval_loss',
             report_to="wandb",
             push_to_hub=False,
