@@ -5,7 +5,7 @@ import argparse
 def main():
 
 
-    parser= argparse.ArgumentParser(description="This script creates the dataset label csvs for the model training")
+    parser= argparse.ArgumentParser(description="This script creates the dataset label csvs for the model training in the vowel discrimintaion regime")
 
     parser.add_argument('--data_dir', type=str, required=True, help='directory the data is located in')
     parser.add_argument('--save_dir', type=str, required=True, help='directory you want to save the labels in')
