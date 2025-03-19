@@ -76,11 +76,11 @@ class LayerFreezeMixin:
 # Models
 
 class AlexNetFinalOnly(nn.Module, LayerFreezeMixin):
-    def __init__(self):
+    def __init__(self, num_classes=3):
         super().__init__()
         pretrained =  models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
 
-        pretrained.classifier[-1] = nn.Linear(in_features=4096, out_features=3)
+        pretrained.classifier[-1] = nn.Linear(in_features=4096, out_features=num_classes)
         # Keep all layers as they are, including AdaptiveAvgPool2d
         self.features = pretrained.features
         self.avgpool = pretrained.avgpool  # This is AdaptiveAvgPool2d
@@ -100,7 +100,7 @@ class AlexNetFinalOnly(nn.Module, LayerFreezeMixin):
     
 
 class AlexNetSuddenDescend(nn.Module, LayerFreezeMixin):
-    def __init__(self):
+    def __init__(self, num_classes=3):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
 
@@ -116,7 +116,7 @@ class AlexNetSuddenDescend(nn.Module, LayerFreezeMixin):
             nn.Dropout(p=0.5, inplace=False),
             nn.Linear(in_features=4096, out_features=4096),
             nn.ReLU(inplace=True),
-            nn.Linear(in_features=4096, out_features=3)
+            nn.Linear(in_features=4096, out_features=num_classes)
         )
         
     def forward(self, x):
@@ -130,7 +130,7 @@ class AlexNetSuddenDescend(nn.Module, LayerFreezeMixin):
         return x
 
 class AlexNetLongDescend(nn.Module, LayerFreezeMixin):
-    def __init__(self):
+    def __init__(self, num_classes=3):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
 
@@ -152,7 +152,7 @@ class AlexNetLongDescend(nn.Module, LayerFreezeMixin):
             nn.Linear(in_features=1024, out_features=512),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=512, out_features=3)
+            nn.Linear(in_features=512, out_features=num_classes)
         )
 
     def forward(self, x):
@@ -167,7 +167,7 @@ class AlexNetLongDescend(nn.Module, LayerFreezeMixin):
 
 
 class AlexNetDescend(nn.Module, LayerFreezeMixin):
-    def __init__(self):
+    def __init__(self, num_classes=3):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
         
@@ -184,7 +184,7 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
             nn.Dropout(p=0.5, inplace=False),
             nn.Linear(in_features=4096, out_features=2048),
             nn.ReLU(inplace=True),
-            nn.Linear(in_features=2048, out_features=3)
+            nn.Linear(in_features=2048, out_features=num_classes)
         )
         
     def forward(self, x):

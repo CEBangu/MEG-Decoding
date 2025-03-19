@@ -204,7 +204,7 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
 
 
 
-def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, project_name=None):
+def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, freeze_type, project_name=None):
     """
     This function handles the wandb parameter sweep for a given cnn model architecture
 
@@ -285,7 +285,7 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
         print("Chance level:", chance_level)
 
         
-        model = model_class().to(device=device)
+        model = model_class(num_classes=num_classes).to(device=device)
         # model.reset_parameters()
         model.freeze_type(freeze_type=freeze_type)
 
@@ -304,7 +304,8 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
                                        train_loader=train_loader, 
                                        val_loader=val_loader, 
                                        criterion=criterion, 
-                                       optimizer=optimizer, 
+                                       optimizer=optimizer,
+                                       num_classes=num_classes, 
                                        num_epochs=200, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
                                        device=device,  
                                        fold=fold)

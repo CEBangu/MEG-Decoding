@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--model_type', type=str, required=True, help="The model architecture you want to train")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
     parser.add_argument('--num_folds', type=int, required=True, help="how many k folds")
+    parser.add_argument('--num_classes', type=int, default=3, help="how many classes")
     parser.add_argument('--project_name', type=str, default=None, help="project name")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
     parser.add_argument('--data_dir', type=str, required=True, help="path to image directory you want to train on") #update as needed
@@ -58,6 +59,7 @@ def main():
 
     # change later, just want to test it out for now. 
     k = 2 #args.num_folds
+    num_classes = args.num_classes
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
                     model_type=args.model_type,
@@ -65,6 +67,7 @@ def main():
                     model_class=model_class, 
                     device=device,
                     k=k,
+                    num_classes=num_classes,
                     freeze_type=freeze_type,
                     project_name=args.project_name
                 ),
