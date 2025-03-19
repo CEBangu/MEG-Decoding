@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader, Subset
+from torchvision import transforms
 
 from experiment import f1_metric, precision_metric, accuracy_metric, recall_metric
 
@@ -28,13 +29,14 @@ def get_optimizer(name, model, lr, weight_decay):
     if name == "adamw_torch":
         return optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif name == "sgd":
-        return optim.SGD(model.parameters(), lr=lr, momentum=0.95, weight_decay=weight_decay)
+        return optim.SGD(model.parameters(), lr=lr, momentum=0.90, weight_decay=weight_decay)
     elif name == "adam":
         return optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     elif name == "rmsprop":
         return optim.RMSprop(model.parameters(), lr=lr, weight_decay=weight_decay)
     else:
         raise ValueError(f"Unknown optimizer: {name}")
+
 
 
 def cnn_compute_metrics(predictions, labels, num_classes=3):
@@ -233,12 +235,28 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
         train_subset = Subset(dataset, train_index.tolist())
         val_subset = Subset(dataset, val_index.tolist())
 
+        # let's see if some transformations help?
+        train_transforms = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(15),
+            transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
+        ])
+        # def train_set_collate_fn(batch):
+        #     """
+        #     This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
+        #     these in the dataloader)
+        #     """
+        #     # images, labels = zip(*batch)  # Unpack batch
+        #     # images = [train_transforms(img) for img in images]  # Apply train transforms
+        #     # return torch.stack(images), torch.tensor(labels)
+
         train_loader = DataLoader(
             train_subset, 
             batch_size=config.batch_size, 
             shuffle=True, 
             num_workers=8, 
-            pin_memory=True
+            pin_memory=True,
+            # collate_fn=train_set_collate_fn #transforms only for training set
             )
         
         val_loader = DataLoader(
@@ -256,13 +274,17 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
 
         unique_train_labels, train_counts = np.unique(np.array(train_labels), return_counts=True)
         unique_val_labels, val_counts = np.unique(np.array(val_labels), return_counts=True)
-        lables = dict(zip(unique_train_labels, train_counts))
-        amounts = [amount for _, amount in labels.items()]
+
+        train_labels_dict = dict(zip(unique_train_labels, train_counts))
+        val_labels_dict = dict(zip(unique_val_labels, val_counts))
+
+        amounts = [amount for _, amount in val_labels_dict.items()]
         chance_level = max(amounts)/sum(amounts) * 100
-        print("Train label distribution:", labels)
-        print("Validation label distribution:", labels)
+        print("Train label distribution:", train_labels_dict)
+        print("Validation label distribution:", val_labels_dict)
         print("Chance level:", chance_level)
 
+        
         model = model_class().to(device=device)
         # model.reset_parameters()
         model.freeze_type(freeze_type=freeze_type)
@@ -283,7 +305,7 @@ def cnn_sweep_train(model_type, model_class, device, k, dataset, freeze_type, pr
                                        val_loader=val_loader, 
                                        criterion=criterion, 
                                        optimizer=optimizer, 
-                                       num_epochs=160, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
+                                       num_epochs=200, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)

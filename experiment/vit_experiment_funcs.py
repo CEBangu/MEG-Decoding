@@ -2,6 +2,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import KFold
 from transformers import Trainer, TrainingArguments
 from torch.utils.data import Subset
+from collections import Counter
 import numpy as np
 import torch
 import wandb
@@ -123,7 +124,7 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
         # Count label occurrences
         train_label_counts = Counter(train_labels)
         val_label_counts = Counter(val_labels)
-        
+
         chance_accuracy = max(val_label_counts.values())/sum(val_label_counts.values()) 
 
         # Print class distributions
