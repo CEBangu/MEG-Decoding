@@ -49,10 +49,17 @@ echo "NUM_FOLDS: $NUM_FOLDS"
 echo "LABELS: $LABELS"
 echo "DATA_DIR: $DATA_DIR"
 echo "PROJECT_NAME: $PROJECT_NAME"
+echo "NUM_CLASSES: $NUM_CLASSES"
 
 # set pythonpath so we can import the custom modules
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-python3 $HOME/MEG-Decoding/vit_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --project_name $PROJECT_NAME --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR
+CMD="python3 $HOME/MEG-Decoding/vit_training.py --model_path $MODEL_PATH --freeze_type $FREEZE_TYPE --project_name $PROJECT_NAME --num_folds $NUM_FOLDS --labels $LABELS --data_dir $DATA_DIR"
 
+if [[ -n "${NUM_CLASSES}" ]]; then
+    CMD+=" --num_classes $NUM_CLASSES"
+fi
+
+# Execute the command
+eval "$CMD"

@@ -37,10 +37,12 @@ def main():
             new_df = pd.concat([new_df, df[df["Label"] == 0]], axis=0)
 
             # subsample the covert samples
-            df_label_1 = df[df["Label"] == 1].sample(n=len(new_df), random_state=42).reset_index(drop=True)
+            df_label_1 = df[df["Label"] == 1].sample(n=len(new_df)).reset_index(drop=True)
             
             # add them to the new dataframe
             new_df = pd.concat([new_df, df_label_1], axis=0)
+
+            print(f"samples in new df: {len(new_df)}")
 
             new_df.to_csv(os.path.join(args.save_dir, f"covert_overt_{args.dimensions}_Kfold_train.csv"), index=False)
 

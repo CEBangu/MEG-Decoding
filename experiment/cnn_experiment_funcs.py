@@ -224,8 +224,6 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
     group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}"
     run.name = group_name
 
-    criterion = nn.CrossEntropyLoss()
-
     kf = KFold(n_splits=k, shuffle=True, random_state=42)
     fold_results = []
 
@@ -284,7 +282,13 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
         print("Validation label distribution:", val_labels_dict)
         print("Chance level:", chance_level)
 
-        
+        class_weights = torch.tensor([amount for _, amount in train_labels_dict.items()], dtype=torch.float)
+        class_weights = 1.0/class_weights
+        class_weights = class_weights / class_weights.sum()
+        class_weights = class_weights.to(device)
+
+        criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
+
         model = model_class(num_classes=num_classes).to(device=device)
         # model.reset_parameters()
         model.freeze_type(freeze_type=freeze_type)
@@ -306,7 +310,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
                                        criterion=criterion, 
                                        optimizer=optimizer,
                                        num_classes=num_classes, 
-                                       num_epochs=200, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
+                                       num_epochs=30, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)

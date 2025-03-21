@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--model_path', type=str, required=True, help="The HF Model Path")
     parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
     parser.add_argument('--num_folds', type=int, required=True, help="How many folds")
+    parser.add_argument('--num_classes', type=int, default=3, help="number of classes in task")
     parser.add_argument('--project_name', type=str, default=None, help="name of the project, i.e., datatype")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
     parser.add_argument('--data_dir', type=str, required=True, help="path to image dir")
@@ -58,6 +59,8 @@ def main():
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     freeze_type = args.freeze_type
+    num_classes = args.num_classes
+    k = args.num_folds
 
     wandb.agent(sweep_id, 
                 function=lambda:vit_sweep_kfold(
@@ -65,10 +68,10 @@ def main():
                     train_dataset_processor=processor,
                     model_class=MEGVisionTransformer,
                     model_name=args.model_path,
-                    num_classes=3,
+                    num_classes=num_classes,
                     config=sweep_config,
                     freeze_type=args.freeze_type,
-                    k=3, #args.num_folds,
+                    k=k,
                     project_name=args.project_name
                 ),
                 count=3 # number of hyperparameters to search over

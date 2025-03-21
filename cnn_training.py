@@ -35,10 +35,10 @@ def main():
     "method": "bayes",
     "metric": {"name": "val_loss", "goal": "minimize"}, # changed from validation loss to f1
     "parameters": {
-        "learning_rate": {"values": [0.0001]}, #]},
-        "batch_size": {"values": [128]}, #128]},
-        "optimizer": {"values": ["sgd"]}, #"rmsprop", "adamw_torch"]},
-        "weight_decay": {"values": [0]}, #1e-2, 1e-3]}, # let's try some weight decay
+        "learning_rate": {"values": [0.0001, 1e-5, 3e-5]}, #]},
+        "batch_size": {"values": [64, 128]}, #128]},
+        "optimizer": {"values": ["adam"]}, #"sgd", "rmsprop", "adamw_torch"]},
+        "weight_decay": {"values": [1e-3, 0.01, 1e-4]}, #1e-2, 1e-3]}, # let's try some weight decay
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
@@ -58,7 +58,7 @@ def main():
     freeze_type = args.freeze_type
 
     # change later, just want to test it out for now. 
-    k = 2 #args.num_folds
+    k = args.num_folds
     num_classes = args.num_classes
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
@@ -71,7 +71,7 @@ def main():
                     freeze_type=freeze_type,
                     project_name=args.project_name
                 ),
-                count=3) # need to change the number of hyperparameters searched over.
+                count=5) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":
