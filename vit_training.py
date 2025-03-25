@@ -30,8 +30,8 @@ def main():
         "parameters": {
             "learning_rate": {"values": [1e-5, 3e-5, 5e-5, 1e-4]}, # sweep learning rates (we'll see how many we can do)
             "lr_scheduler_type": {"values": ["linear", "cosine", "constant"]},
-            "optimizer": {"values": ["adamw_torch", "adamw_hf", "adafactor"]}, # have to consider this some more
-            "gradient_accumulation_steps": {"values": [1, 4, 8]}, # does this really matter?
+            "optimizer": {"values": ["adamw_hf"]}, # have to consider this some more
+            # "gradient_accumulation_steps": {"values": [1, 4, 8]}, # does this really matter?
             },
             "early_terminate": {
                 "type": "hyperband", # stop runs early

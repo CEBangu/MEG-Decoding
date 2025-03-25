@@ -3,7 +3,7 @@
 #SBATCH --output=logs/output_%j.log
 #SBATCH --error=logs/error_%j.log
 #SBATCH --partition=gpu #from dedicatedgpu
-#SBATCH --qos=fast
+# #SBATCH --qos=fast
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=8000 #8GB

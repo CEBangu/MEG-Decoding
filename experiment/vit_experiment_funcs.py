@@ -92,7 +92,7 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
     )
 
     config=wandb.config
-    group_name = f"ViT_lr:{config.learning_rate}_optim:{config.optimizer}_sched:{config.lr_scheduler_type}_grads:{config.gradient_accumulation_steps}"
+    group_name = f"ViT_lr:{config.learning_rate}_optim:{config.optimizer}_sched:{config.lr_scheduler_type}"#_grads:{config.gradient_accumulation_steps}"
     # Optionally, set tags or name here:
     run.name = group_name
 
@@ -150,11 +150,11 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
             learning_rate=config.learning_rate, # take it from the wandb config
             lr_scheduler_type=config.lr_scheduler_type, # take from config
             optim=config.optimizer, # tune optimizer
-            gradient_accumulation_steps=config.gradient_accumulation_steps, #tune gradient accumulation
+            # gradient_accumulation_steps=config.gradient_accumulation_steps, #tune gradient accumulation
             per_device_train_batch_size=128, # IMPORTANT
             per_device_eval_batch_size=128, # IMPORTANT
             num_train_epochs=20, # IMPORTANT
-            warmup_ratio=0.001,
+            # warmup_ratio=0.001,
             logging_steps=1, # change to more later
             metric_for_best_model='eval_loss',
             report_to="wandb",

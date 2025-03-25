@@ -7,7 +7,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 
@@ -224,10 +224,12 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
     group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}"
     run.name = group_name
 
-    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    labels = dataset.data.iloc[:, 1].values
+
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
     fold_results = []
 
-    for fold, (train_index, val_index) in enumerate(kf.split(np.arange(len(dataset)))):
+    for fold, (train_index, val_index) in enumerate(skf.split(np.arange(len(dataset)), labels)):
         print(f"Fold {fold+1}/{k}")
 
         train_subset = Subset(dataset, train_index.tolist())
