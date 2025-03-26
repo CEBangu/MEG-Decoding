@@ -35,10 +35,10 @@ def main():
     "method": "bayes",
     "metric": {"name": "val_loss", "goal": "minimize"}, # changed from validation loss to f1
     "parameters": {
-        "learning_rate": {"values": [1e-4,]}, #0.0001, 3e-4]},
+        "learning_rate": {"values": [1e-4,2e-4]}, #0.0001, 3e-4]},
         "batch_size": {"values": [128]}, #128]},
-        "optimizer": {"values": ["sgd"]}, #"adam", "rmsprop", "adamw_torch"]},
-        "weight_decay": {"values": [1e-4]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
+        "optimizer": {"values": ["sgd", "adam"]}, #, "rmsprop", "adamw_torch"]},
+        "weight_decay": {"values": [1e-4, 2e-4]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
@@ -71,7 +71,7 @@ def main():
                     freeze_type=freeze_type,
                     project_name=args.project_name
                 ),
-                count=2) # need to change the number of hyperparameters searched over.
+                count=5) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":

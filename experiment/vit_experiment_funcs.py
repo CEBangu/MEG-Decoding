@@ -1,5 +1,5 @@
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from transformers import Trainer, TrainingArguments
 from torch.utils.data import Subset
 from collections import Counter
@@ -96,11 +96,12 @@ def vit_sweep_kfold(train_dataset, train_dataset_processor, model_class, model_n
     # Optionally, set tags or name here:
     run.name = group_name
 
+    labels = train_dataset.df["Label"].values
     # decide on the splits
-    kf = KFold(n_splits=k, shuffle=True, random_state=42)
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
     fold_results = []
 
-    for fold, (train_idx, val_idx) in enumerate(kf.split(train_dataset)):
+    for fold, (train_idx, val_idx) in enumerate(skf.split(np.arange(len(train_dataset)), labels)):
         print(f"Training Fold {fold + 1}/{k}...")
 
         # remember to reinstantiate the model!!! and freeze the layers for each fold
