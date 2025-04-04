@@ -5,34 +5,7 @@ import numpy as np
 from datahandling import BcomMEG
 import time
 from joblib import Parallel, delayed
-
-
-def save_results(subject, syllable, all_coefficients, save_dir):
-    """ Save computed coefficients to the correct directory """
-    os.makedirs(save_dir, exist_ok=True)  # Ensure the directory exists
-    output_file = os.path.join(save_dir, f"{subject}_{syllable}_coefficients.npy")
-    np.save(output_file, all_coefficients)
-    print(f"Saved results to {output_file}")
-
-def scalogram_de_reconstruction(data, wavelet='db4', level=5):
-    # First decompose
-    coefficients = pywt.wavedec(data, wavelet, level=level)
-    coefficients[-1] = np.zeros_like(coefficients[-1]) #d1 #get rid of these two as in Dash et al 2020.
-    coefficients[-2] = np.zeros_like(coefficients[-2]) #d2
-    # Reconstruct
-    reconstructed_signal = pywt.waverec(coefficients, wavelet)[:len(data)]
-    return reconstructed_signal
-
-def scalogram_cwt(processed_data, wavelet, scales, sampling_period):
-    coefficients, _ = pywt.cwt(data=processed_data, scales=scales, wavelet=wavelet, sampling_period=sampling_period)
-    return coefficients
-
-def process_channel(signal, cwt_wavelet, scales, sampling_period, dwt_wavelet_name, level):
-    """Function to parallelize the channel computation"""
-    processed = scalogram_de_reconstruction(signal, wavelet=dwt_wavelet_name, level=level)
-    coefficients = scalogram_cwt(processed_data=processed, wavelet=cwt_wavelet, scales=scales, sampling_period=sampling_period)
-    return np.abs(coefficients)
-
+from experiment import process_channel, save_coefficient_results
 
 def main():
     parser = argparse.ArgumentParser(description="This script computes the Continuous Wavelet Transform coefficients for the Scalograms")
@@ -117,7 +90,7 @@ def main():
                 end_time = time.time()    
                 print(f"Processing time for subject {subject}, syllable {syllable}, epoch {epoch}: {end_time - start_time} seconds")
                 
-            save_results(
+            save_coefficient_results(
                 subject=subject,
                 syllable=syllable,
                 all_coefficients=all_coefficients,
