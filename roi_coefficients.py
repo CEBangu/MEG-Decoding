@@ -46,52 +46,50 @@ def main():
     subjects_dir = os.path.dirname(fs_dir) 
 
     #get labels
-    labels = mne.read_labels_from_annot(
+    labels_hcp = mne.read_labels_from_annot(
         subject='fsaverage',
         parc='HCPMMP1',
         hemi='lh',
         subjects_dir=subjects_dir
     )
 
-    ba6_labels = [label for label in labels if 'L_6ma_ROI-lh' in label.name][0] +\
-                [label for label in labels if 'L_6mp_ROI-lh' in label.name][0]
+    labels_aparc = mne.read_labels_from_annot(
+        subject='fsaverage',
+        parc='aparc',
+        hemi='lh',
+        subjects_dir=subjects_dir
+    )
+
+    sma_labels = [label for label in labels_hcp if 'L_6ma_ROI-lh' in label.name][0] +\
+            [label for label in labels_hcp if 'L_6mp_ROI-lh' in label.name][0] +\
+            [label for label in labels_hcp if 'L_SCEF_ROI-lh' in label.name][0] +\
+            [label for label in labels_hcp if 'L_SFL_ROI-lh' in label.name][0]
 
 
-    broca_labels = [label for label in labels if "L_44_ROI-lh" in label.name][0] +\
-            [label for label in labels if "L_45_ROI-lh" in label.name][0]
+    broca_labels = [label for label in labels_hcp if "L_44_ROI-lh" in label.name][0] +\
+            [label for label in labels_hcp if "L_45_ROI-lh" in label.name][0]
 
 
-    stg_labels = [label for label in labels if "L_A1_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_MBelt_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_LBelt_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_TA2_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_STGa_ROI-lh" in label.name][0]
+    stg_labels = [label for label in labels_aparc if 'superiortemporal-lh' in label.name][0]
 
-    mtg_labels = [label for label in labels if "L_MT_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_TPOJ1_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_TPOJ2_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_STSdp_ROI-lh" in label.name][0]
+    mtg_labels = [label for label in labels_aparc if 'middletemporal-lh' in label.name][0]
 
-    stp_labels = [label for label in labels if "L_A1_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_MBelt_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_LBelt_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_TA2_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_RI_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_PBelt_ROI-lh" in label.name][0] 
+    # NO this should be SPT silly goose. 
+    # SPT lable = 
 
-    ba10_labels = [label for label in labels if "L_10d_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_10v_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_a10p_ROI-lh" in label.name][0] +\
-                [label for label in labels if "L_p10p_ROI-lh" in label.name][0]
+    # ba10_labels = [label for label in labels if "L_10d_ROI-lh" in label.name][0] +\
+    #             [label for label in labels if "L_10v_ROI-lh" in label.name][0] +\
+    #             [label for label in labels if "L_a10p_ROI-lh" in label.name][0] +\
+    #             [label for label in labels if "L_p10p_ROI-lh" in label.name][0]
 
 
     label_dictionary = {
-        "ba6": ba6_labels,
+        "sma": sma_labels,
         "broca": broca_labels,
         "stg": stg_labels,
         "mtg": mtg_labels,
-        "stp": stp_labels,
-        "ba10": ba10_labels
+        # "stp": stp_labels,
+        # "ba10": ba10_labels
     }
 
     ##################################
@@ -115,7 +113,7 @@ def main():
     )
 
     ##############################
-    # Block-wise forward solution#
+    # Block-wise forward solution #
     ##############################
 
     dir = args.data_dir
@@ -132,8 +130,7 @@ def main():
                 avoid_producing=avoid_producing,
                 )
 
-
-    for subject in data.data:
+    for subject in data.data: # loop through the subjects (blocks, really)
         # forward solution by block
         first_epoch_name = list(data.data[subject].keys())[0]
         fwd_solution_epoch = data.data[subject][first_epoch_name]
@@ -165,7 +162,7 @@ def main():
         snr = 2.0
         lambda2 = 1.0/snr**2
 
-        for syllable in data.data[subject]: 
+        for syllable in data.data[subject]:  # loop through the syllables to get the inverse solution for each set
             stc = mne.minimum_norm.apply_inverse_epochs(
                 data.data[subject][syllable],  # these are all epoch.fif objects
                 inverse_operator=inverse_operator,
@@ -173,7 +170,14 @@ def main():
                 method='eLORETA',
             )
 
-            for label in label_dictionary:
+            # set up array to store the different ROIs
+            
+            roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, 241]) # num labels x num epochs x coefficient array
+            print(roi_array.shape)
+
+            for i, label in enumerate(label_dictionary): #for each ROI get the timecourse
+                print(f"getting timecourse for {label}")
+
                 label_time_courses = mne.extract_label_time_course(
                     stc,
                     label_dictionary[label],
@@ -181,8 +185,9 @@ def main():
                     mode='mean_flip',
                     return_generator=False,
                 )
-
-                for i, tc in enumerate(label_time_courses):
+                print(len(syllable))
+                print(len(label_time_courses))
+                for j, tc in enumerate(label_time_courses): # process the time course to get the transform
                     result = process_channel(
                         signal=tc,
                         cwt_wavelet=cwt_wavelet,
@@ -191,17 +196,25 @@ def main():
                         dwt_wavelet_name=dwt_wavelet_name,
                         level=level,
                     )
-                    reshaped_result = np.transpose(result, (0, 2, 1)).squeeze() # scales x timepoints 
+                    print(result.shape)
+                    reshaped_result = np.transpose(result, (0, 2, 1))
+                    print(reshaped_result.shape)
+                    reshaped_result = reshaped_result.squeeze()
+                    print(reshaped_result.shape)
+                    print(tc.shape[1]) # scales x timepoints 
+                    reshaped_result = reshaped_result[:, :tc.shape[1]]
+                    print(reshaped_result.shape)
+                    roi_array[i, j] = reshaped_result
 
-                    save_coefficient_results(
-                        subject=subject,
-                        syllable=syllable,
-                        all_coefficients=reshaped_result,
-                        save_dir=save_dir
-                        )
+            print(roi_array.shape)
+
+            save_coefficient_results( # ROI x Epochs x Coefficient Array
+                subject=subject,
+                syllable=syllable,
+                all_coefficients=roi_array,
+                save_dir=save_dir
+                )
                     
-                    break
-                break
             break
         break
 

@@ -35,14 +35,14 @@ class ScalogramPlotter:
         
 
     def plot_many(self, coefficients: np.ndarray):
-        """Plots scalograms when more than 1 are requested"""
+        """Plots scalograms when n are requested, and it is being done in sensor space"""
         
         fig, ax = plt.subplots(
             self.dimensions[0], 
             self.dimensions[1], 
             figsize=(self.figsize))
         
-        ax = np.array(ax, ndmin=2) # otherwise parser complains - might ahve to revisit this though
+        ax = np.array(ax, ndmin=2) # otherwise parser complains
         subplot_index = 0
         for channel_index, channel in enumerate(coefficients):
             # check if the channel index is in the index list in case you don't want to plot all of them.
@@ -74,6 +74,48 @@ class ScalogramPlotter:
         fig.patch.set_visible(False)
 
         return fig
+
+    def plot_roi(self, coefficients: np.ndarray):
+        """plot n scalograms when it is in roi space.
+        NB! this takes in split up epochs already i.e., tensor of ROI x 100 x 241
+        """
+        
+        # Check if the input tensor is 3-dimensional
+        if coefficients.ndim != 3:
+            raise ValueError("Input tensor must be 3-dimensional (ROI x 100 x 241).")
+            
+        fig, ax = plt.subplots(
+            self.dimensions[0], 
+            self.dimensions[1], 
+            figsize=(self.figsize))
+        
+        ax = np.array(ax, ndmin=2)
+        subplot_index = 0
+        for roi_index, roi in enumerate(coefficients):
+            if roi_index in self.index_list:
+                r, c = divmod(subplot_index, self.dimensions[0])
+                ax[r, c].pcolormesh(roi, cmap=self.cmap)
+                ax[r, c].set_xticks([])
+                ax[r, c].set_yticks([])
+                subplot_index += 1
+            if subplot_index < self.dimensions[0]*self.dimensions[1]:
+                for roi_index in range(subplot_index, self.dimensions[0]*self.dimensions[1]):
+                    print(f"plotting 0s for roi index: {roi_index}")
+                    r, c = divmod(roi_index, self.dimensions[0])
+                    ax[r, c].pcolormesh(np.zeros_like(roi), cmap=self.cmap)
+                    ax[r, c].set_xticks([])
+                    ax[r, c].set_yticks([])
+            
+            for axes in ax.flatten():
+                axes.spines['top'].set_visible(False)
+                axes.spines['right'].set_visible(False)
+                axes.spines['left'].set_visible(False)
+                axes.spines['bottom'].set_visible(False)
+
+            plt.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0, wspace=0)
+            fig.patch.set_visible(False)
+
+            return fig
 
 
     def plot_average_scalogram(self, coefficients: np.ndarray):
