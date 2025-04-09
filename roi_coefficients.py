@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--speech_type', type=str, required=True, help="Covert or Overt?")
     parser.add_argument('--data_dir', type=str, help="Directory where the data is stored")
     parser.add_argument('--save_dir', type=str, required=True, help="Directory to save the coefficients")
+    parser.add_argument('--mne_dir', type=str, help="where fsaverage is located")
 
     args = parser.parse_args()
 
@@ -42,8 +43,7 @@ def main():
     ###########################
 
     # get fsaverage
-    fs_dir = mne.datasets.fetch_fsaverage(verbose=True)
-    subjects_dir = os.path.dirname(fs_dir) 
+    subjects_dir = args.mne_dir if args.mne_dir is not None else os.path.dirname(mne.datasets.fetch_fsaverage(verbose=True))
 
     #get labels
     labels_hcp = mne.read_labels_from_annot(

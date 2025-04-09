@@ -40,11 +40,17 @@ echo "AVOID_READING: $AVOID_READING"
 echo "AVOID_PRODUCING: $AVOID_PRODUCING"
 echo "Job Array Index: $SLURM_ARRAY_TASK_ID"
 
+
 INDEX=$((SLURM_ARRAY_TASK_ID - 1))
 
 SUBJECTS="${SUBJECT_LISTS[$INDEX]}"
 
+MNE_ARG=""
+if [ -n "$MNE_DIR" ]; then
+    MNE_ARG="--mne_dir $MNE_DIR"
+fi
 
+echo $MNE_ARG
 
 echo "Running job for subjects: $SUBJECTS"
 
@@ -71,26 +77,7 @@ echo "Python path: $PYTHONPATH"
 
 # Print Python command for debugging
 echo "Executing Python command:"
-echo "python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir $DATA_DIR --save_dir $SCRATCH_DIR"
+echo "python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir $DATA_DIR --save_dir $SCRATCH_DIR $MNE_ARG"
 
 # run the python script
-python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR"
-
-# # Verify files exist before moving
-# if [ "$(ls -A "$SCRATCH_DIR" 2>/dev/null)" ]; then
-#     echo "Copying results to final storage..."
-#     rsync -av --info=progress2 "$SCRATCH_DIR/" "$FINAL_STORAGE/"
-
-#     if [ $? -eq 0 ]; then
-#         echo "Files successfully moved to $FINAL_STORAGE"
-#     else
-#         echo "ERROR: File move failed."
-#     fi
-# else
-#     echo "WARNING: No files in $SCRATCH_DIR to move."
-# fi
-
-# # Keep scratch directory untouched (no deletions)
-# echo "Skipping deletion of $SCRATCH_DIR for verification."
-
-# echo "Job done."
+python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR" $MNE_ARG
