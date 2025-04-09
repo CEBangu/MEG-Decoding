@@ -9,13 +9,26 @@ import re
 import time
 from joblib import Parallel, delayed
 
-def process_epoch(epoch_index, epoch, filename, args, plotter):
+def process_epoch_sensor(epoch_index, epoch, filename, args, plotter):
     new_filename = re.sub(r'_coefficients.*', f'_scalogram_{epoch_index}', filename)
     start_time = time.time()
     if plotter.average:
         scalogram = plotter.plot_average_scalogram(epoch)
     else:
         scalogram = plotter.plot_many(epoch)
+    plotter.save_plot(filename=new_filename, fig=scalogram)
+    end_time = time.time()
+    print(f"Time taken for epoch {epoch_index} of file {filename}: {end_time - start_time} seconds")
+
+
+def process_epoch_roi(epoch_index, epoch, filename, args, plotter):
+    new_filename = re.sub(r'_coefficients.*', f'_scalogram_{epoch_index}', filename)
+    start_time = time.time()
+    epoch = epoch[:, epoch_index, :, :]
+    if plotter.average:
+        scalogram = plotter.plot_average_scalogram(epoch)
+    else:
+        scalogram = plotter.plot_roi(epoch)
     plotter.save_plot(filename=new_filename, fig=scalogram)
     end_time = time.time()
     print(f"Time taken for epoch {epoch_index} of file {filename}: {end_time - start_time} seconds")
@@ -30,10 +43,16 @@ def process_file(filename, args, plotter):
     except Exception as e:
         print(f"Error loading {filename}: {e}")
         return
-    Parallel(n_jobs=args.epoch_workers)(
-        delayed(process_epoch)(epoch_index, epoch, filename, args, plotter)
-        for epoch_index, epoch in enumerate(data)
-    )
+    if data.ndim == 3:
+        Parallel(n_jobs=args.epoch_workers)(
+            delayed(process_epoch_sensor)(epoch_index, epoch, filename, args, plotter)
+            for epoch_index, epoch in enumerate(data)
+        )
+    elif data.ndim == 4:
+        Parallel(n_jobs=args.epoch_workers)(
+            delayed(process_epoch_roi)(i, data, filename, args, plotter)
+            for i in range(data.shape[1])
+        )
     print(f"Finished plotting {filename}")
 
 def main():

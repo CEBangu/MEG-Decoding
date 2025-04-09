@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use("Agg") # NON GUI
+# matplotlib.use("Agg") # NON GUI
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -98,24 +98,24 @@ class ScalogramPlotter:
                 ax[r, c].set_xticks([])
                 ax[r, c].set_yticks([])
                 subplot_index += 1
-            if subplot_index < self.dimensions[0]*self.dimensions[1]:
-                for roi_index in range(subplot_index, self.dimensions[0]*self.dimensions[1]):
-                    print(f"plotting 0s for roi index: {roi_index}")
-                    r, c = divmod(roi_index, self.dimensions[0])
-                    ax[r, c].pcolormesh(np.zeros_like(roi), cmap=self.cmap)
-                    ax[r, c].set_xticks([])
-                    ax[r, c].set_yticks([])
+        if subplot_index < self.dimensions[0]*self.dimensions[1]:
+            for roi_index in range(subplot_index, self.dimensions[0]*self.dimensions[1]):
+                print(f"plotting 0s for roi index: {roi_index}")
+                r, c = divmod(roi_index, self.dimensions[0])
+                ax[r, c].pcolormesh(np.zeros_like(roi), cmap=self.cmap)
+                ax[r, c].set_xticks([])
+                ax[r, c].set_yticks([])
             
-            for axes in ax.flatten():
-                axes.spines['top'].set_visible(False)
-                axes.spines['right'].set_visible(False)
-                axes.spines['left'].set_visible(False)
-                axes.spines['bottom'].set_visible(False)
+        for axes in ax.flatten():
+            axes.spines['top'].set_visible(False)
+            axes.spines['right'].set_visible(False)
+            axes.spines['left'].set_visible(False)
+            axes.spines['bottom'].set_visible(False)
 
-            plt.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0, wspace=0)
-            fig.patch.set_visible(False)
+        plt.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0, wspace=0)
+        fig.patch.set_visible(False)
 
-            return fig
+        return fig
 
 
     def plot_average_scalogram(self, coefficients: np.ndarray):
