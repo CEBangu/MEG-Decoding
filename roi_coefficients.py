@@ -75,7 +75,7 @@ def main():
     mtg_labels = [label for label in labels_aparc if 'middletemporal-lh' in label.name][0]
 
     # NO this should be SPT silly goose. 
-    # SPT lable = 
+    # SPT lable = first 14 from Hickock et al 2009; last 6 from Pa and Hickock 2007
 
     # ba10_labels = [label for label in labels if "L_10d_ROI-lh" in label.name][0] +\
     #             [label for label in labels if "L_10v_ROI-lh" in label.name][0] +\
