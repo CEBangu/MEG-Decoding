@@ -60,36 +60,34 @@ def main():
         subjects_dir=subjects_dir
     )
 
+    # from from Sheets et al. 2021 
     sma_labels = [label for label in labels_hcp if 'L_6ma_ROI-lh' in label.name][0] +\
             [label for label in labels_hcp if 'L_6mp_ROI-lh' in label.name][0] +\
             [label for label in labels_hcp if 'L_SCEF_ROI-lh' in label.name][0] +\
             [label for label in labels_hcp if 'L_SFL_ROI-lh' in label.name][0]
 
 
+    # commonly attirbuted
     broca_labels = [label for label in labels_hcp if "L_44_ROI-lh" in label.name][0] +\
             [label for label in labels_hcp if "L_45_ROI-lh" in label.name][0]
 
 
+    # in the name
     stg_labels = [label for label in labels_aparc if 'superiortemporal-lh' in label.name][0]
 
+    # in the name
     mtg_labels = [label for label in labels_aparc if 'middletemporal-lh' in label.name][0]
 
-    # NO this should be SPT silly goose. 
-    # SPT lable = first 14 from Hickock et al 2009; last 6 from Pa and Hickock 2007
-
-    # ba10_labels = [label for label in labels if "L_10d_ROI-lh" in label.name][0] +\
-    #             [label for label in labels if "L_10v_ROI-lh" in label.name][0] +\
-    #             [label for label in labels if "L_a10p_ROI-lh" in label.name][0] +\
-    #             [label for label in labels if "L_p10p_ROI-lh" in label.name][0]
+    # from Eckert et al. 2021
+    spt_labels = [label for label in labels_hcp if 'PSL' in label.name][0]
 
 
     label_dictionary = {
         "sma": sma_labels,
         "broca": broca_labels,
         "stg": stg_labels,
-        "mtg": mtg_labels,
-        # "stp": stp_labels,
-        # "ba10": ba10_labels
+        # "mtg": mtg_labels,
+        "spt": spt_labels,
     }
 
     ##################################
@@ -185,8 +183,8 @@ def main():
                     mode='mean_flip',
                     return_generator=False,
                 )
-                print(len(syllable))
-                print(len(label_time_courses))
+                # print(len(syllable))
+                # print(len(label_time_courses))
                 for j, tc in enumerate(label_time_courses): # process the time course to get the transform
                     result = process_channel(
                         signal=tc,
@@ -196,17 +194,17 @@ def main():
                         dwt_wavelet_name=dwt_wavelet_name,
                         level=level,
                     )
-                    print(result.shape)
+                    # print(result.shape)
                     reshaped_result = np.transpose(result, (0, 2, 1))
-                    print(reshaped_result.shape)
+                    # print(reshaped_result.shape)
                     reshaped_result = reshaped_result.squeeze()
-                    print(reshaped_result.shape)
-                    print(tc.shape[1]) # scales x timepoints 
+                    # print(reshaped_result.shape)
+                    # print(tc.shape[1]) # scales x timepoints 
                     reshaped_result = reshaped_result[:, :tc.shape[1]]
-                    print(reshaped_result.shape)
+                    # print(reshaped_result.shape)
                     roi_array[i, j] = reshaped_result
 
-            print(roi_array.shape)
+            # print(roi_array.shape)
 
             save_coefficient_results( # ROI x Epochs x Coefficient Array
                 subject=subject,

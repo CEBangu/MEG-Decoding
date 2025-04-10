@@ -36,6 +36,7 @@ labels_train_test.py
 classic_decoding.ipynb
 config_generator.ipynb
 file_mover.py
+file_mover_roi.py
 labels_train_test.py
 test.ipynb
 *.txt
