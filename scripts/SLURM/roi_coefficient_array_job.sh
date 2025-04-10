@@ -45,6 +45,13 @@ INDEX=$((SLURM_ARRAY_TASK_ID - 1))
 
 SUBJECTS="${SUBJECT_LISTS[$INDEX]}"
 
+MNE_ARG=""
+if [ -n "$MNE_DIR" ]; then
+    MNE_ARG="--mne_dir $MNE_DIR"
+fi
+
+echo $MNE_ARG
+
 echo "Running job for subjects: $SUBJECTS"
 
 # make sure the directories exist
@@ -70,7 +77,7 @@ echo "Python path: $PYTHONPATH"
 
 # Print Python command for debugging
 echo "Executing Python command:"
-echo "python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir $DATA_DIR --save_dir $SCRATCH_DIR"
+echo "python3 $HOME/MEG-Decoding/roi_coefficients.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir $DATA_DIR --save_dir $SCRATCH_DIR $MNE_ARG"
 
 # run the python script
-python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR"
+python3 $HOME/MEG-Decoding/roi_coefficients.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR" $MNE_ARG
