@@ -5,7 +5,7 @@ import numpy as np
 from datahandling import BcomMEG
 import time
 from joblib import Parallel, delayed
-from experiment import process_channel, save_coefficient_results
+from wavelets import process_channel, save_coefficient_results
 
 def main():
     parser = argparse.ArgumentParser(description="This script computes the Continuous Wavelet Transform coefficients for the Scalograms")

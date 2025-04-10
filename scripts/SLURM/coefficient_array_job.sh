@@ -10,7 +10,7 @@
 #SBATCH --cpus-per-task=8 # let's take 8 cpus because we parallelized the channels
 #SBATCH --mem=24000 # memory in MB
 #SBATCH --array=1-21 # number of jobs in the array
-#SBATCH --mail-type=END,FAIL # send email on job end and if it fails
+#SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr # email
 
 # check config passed as argument

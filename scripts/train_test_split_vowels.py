@@ -11,6 +11,7 @@ def main():
     parser.add_argument('--data_dir', type=str, required=True, help="Path to where the label csvs are")
     parser.add_argument('--save_dir', type=str, required=True, help="path where the output csvs will be stored")
     parser.add_argument('--dimensions', type=str, required=True, help="the dimensions, formatted like they are in the labels file")
+    parser.add_argument('--class_tag', type=str, help="add the class tag in case it is an roi split; i.e. 3c or 2c")
     
     
     args = parser.parse_args()
@@ -68,6 +69,10 @@ def main():
         else:
             filename_train = f'{unpacked_filename[0]}_all_{args.dimensions}_Kfold_train.csv'
             filename_test = f'{unpacked_filename[0]}_all_{args.dimensions}_test.csv'
+        
+        if args.class_tag is not None:
+            filename_train = args.class_tag + "_" + filename_train
+            filename_test = args.class_tag + "_" + filename_test
 
         df.to_csv(os.path.join(args.save_dir, filename_train), index=False)  # 90% of data
         test_df.to_csv(os.path.join(args.save_dir, filename_test), index=False)    # 10% of data
