@@ -27,7 +27,7 @@ def main():
         'train_test_split_vowels.py', 
         '--data_dir', split_data_path,
         '--save_dir', split_save_path,
-        '--dimensions', res_dims
+        '--dimensions', res_dims,
         '--class_tag', class_tag
     ])
 

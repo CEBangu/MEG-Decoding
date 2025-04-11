@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=coefficient_array_job # name
-#SBATCH --output=output_%A_%a.log # Job Array ID, Task ID
-#SBATCH --error=error_%A_%a.log # Job Array ID, Task ID
+#SBATCH --output=coef_logs/output_%A_%a.log # Job Array ID, Task ID
+#SBATCH --error=coef_logs/error_%A_%a.log # Job Array ID, Task ID
 #SBATCH --time=02:00:00 # timelimit - shouldn't take more than 20 mins if the nodes are available
 #SBATCH --partition=common # partition
 #SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
@@ -10,7 +10,7 @@
 #SBATCH --cpus-per-task=8 # let's take 8 cpus because we parallelized the channels
 #SBATCH --mem=24000 # memory in MB
 #SBATCH --array=1-21 # number of jobs in the array
-#SBATCH --mail-type=END,FAIL # send email on job end and if it fails
+#SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr # email
 
 # check config passed as argument

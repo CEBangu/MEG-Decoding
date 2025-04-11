@@ -4,8 +4,10 @@ import pywt
 import numpy as np
 from argparse import ArgumentParser
 from datahandling import BcomMEG
-from experiment import process_channel, save_coefficient_results
+from wavelets import process_channel, save_coefficient_results
+from mne import set_config
 
+# NB! 55 minutes to run completely for covert producing
 
 
 def main():
@@ -44,6 +46,8 @@ def main():
 
     # get fsaverage
     subjects_dir = args.mne_dir if args.mne_dir is not None else os.path.dirname(mne.datasets.fetch_fsaverage(verbose=True))
+
+    set_config("SUBJECTS_DIR", subjects_dir, set_env=True)
 
     #get labels
     labels_hcp = mne.read_labels_from_annot(
@@ -114,7 +118,9 @@ def main():
     # Block-wise forward solution #
     ##############################
 
-    dir = args.data_dir
+    speech_type = args.speech_type.upper()
+    data_dir = args.data_dir
+    data_dir = os.path.join(data_dir, speech_type)
     subjects = args.subject_list
     avoid_reading = args.avoid_reading
     avoid_producing = args.avoid_producing
@@ -122,7 +128,7 @@ def main():
     save_dir = args.save_dir
 
 
-    data = BcomMEG(dir=dir,
+    data = BcomMEG(dir=data_dir,
                 subjects=subjects,
                 avoid_reading=avoid_reading,
                 avoid_producing=avoid_producing,
@@ -212,9 +218,8 @@ def main():
                 all_coefficients=roi_array,
                 save_dir=save_dir
                 )
-                    
-            break
-        break
+
+                
 
 if __name__ == "__main__":
     main()

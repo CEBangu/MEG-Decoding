@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=cnn_train
-#SBATCH --output=logs/output_%j.log
-#SBATCH --error=logs/error_%j.log
+#SBATCH --output=model_logs/output_%j.log
+#SBATCH --error=model_logs/error_%j.log
 #SBATCH --partition=gpu #from dedicatedgpu
 # #SBATCH --qos=fast
 #SBATCH --gres=gpu:1
