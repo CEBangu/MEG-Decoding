@@ -177,14 +177,21 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
         
         del self.model.classifier
         
+        # self.classifier = nn.Sequential(
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=9216, out_features=4096), 
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=4096, out_features=2048),
+        #     nn.ReLU(inplace=True),
+        #     nn.Linear(in_features=2048, out_features=num_classes)
+        # )
         self.classifier = nn.Sequential(
             nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=9216, out_features=4096), 
+            nn.Linear(in_features=9216, out_features=512), 
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=4096, out_features=2048),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_features=2048, out_features=num_classes)
+            nn.Linear(in_features=512, out_features=num_classes),
         )
         
     def forward(self, x):

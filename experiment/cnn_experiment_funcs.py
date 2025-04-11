@@ -312,7 +312,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
                                        criterion=criterion, 
                                        optimizer=optimizer,
                                        num_classes=num_classes, 
-                                       num_epochs=80, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
+                                       num_epochs=50, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)
