@@ -86,7 +86,7 @@ def main():
         "sma": sma_labels,
         "broca": broca_labels,
         "stg": stg_labels,
-        # "mtg": mtg_labels,
+        "mtg": mtg_labels,
         "spt": spt_labels,
     }
 
