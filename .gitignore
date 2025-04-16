@@ -40,3 +40,5 @@ file_mover_roi.py
 labels_train_test.py
 test.ipynb
 *.txt
+*.html
+*.csv
