@@ -319,7 +319,7 @@ def main():
             ica_subject = ICA(n_components=n_components, # can use None for better explanation but that takes forever
             method=ica_method,
             random_state=random_state,
-            max_iter=2000
+            max_iter=20000 # used to be 2000 - then 5000 - now 10000; gunna try 19 again at 20k
             )
             
             # highpass filter at 1 so that the drift doesnt take all the variance - see MNE docs
