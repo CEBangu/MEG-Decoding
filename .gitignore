@@ -45,3 +45,4 @@ test.ipynb
 .ipynb_checkpoints/
 *.err
 *.out
+/.vscode

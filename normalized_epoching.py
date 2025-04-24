@@ -70,13 +70,13 @@ def main():
     subject_raw_path = op.join(preprocessed_path, args.subject, "subject_cleaned_ica_raw.fif")
     events_path = op.join(preprocessed_path, args.subject, "resampled_events.npy")
 
-    sub = args.subject.split("/")[0]
-    block = args.subject.split("/")[1]
-
     subject_raw = mne.io.read_raw_fif(
         fname=subject_raw_path,
         preload=True,
     )
+
+    sub = args.subject.split("/")[0]
+    block = args.subject.split("/")[1] # this is a string so it will be coerced to int sometimes below
 
     # the coordinates on this channel are super weird, just exclude it from the analysis
     subject_raw = subject_raw.interpolate_bads(exclude=[bad_localization_channel])
@@ -108,108 +108,110 @@ def main():
     subject_raw._data[include_idxs] = rescaled 
 
     for trigger in produce_triggers:
-        for i in range(2, 5):
-            start = time.time()
+    
+        start = time.time()
+        
+        path = os.path.join(raw_path, sub, "MEG", sub, "BCom")
 
-            path = os.path.join(raw_path, sub, "MEG", sub, "BCom")
+        for file in os.listdir(path):
+            if os.path.isdir(os.path.join(path, file)):
+                if sub == 'BCOM_08': #something special about this one
+                    mat_path = os.path.join(path, file, str(int(block) + 1))
+                else:
+                    mat_path = os.path.join(path, file, str(int(block)))
+                break
+        
+        produce_trigger = int(trigger)
+        read_trigger = int(trigger) - 100
+        all_read_events = [event for event in events if int(event[2]) == int(read_trigger)] 
+        all_produce_events = [event for event in events if int(event[2]) == int(produce_trigger)] 
 
-            for file in os.listdir(path):
-                if os.path.isdir(os.path.join(path, file)):
-                    if sub == 'BCOM_08': #something special about this one
-                        mat_path = os.path.join(path, file, str(i + 1))
-                    else:
-                        mat_path = os.path.join(path, file, str(i))
-                    break
+        Epo = Epoching(mat_path, events)
+
+        bad_idx = Epo.get_bad_syll(raw_path, sub, read_trigger, read_triggers, syllables, int(block))
+
+        cleaned_read_events = all_read_events.copy()
+        cleaned_produce_events = all_produce_events.copy()
+
+        for idx in bad_idx[::-1]:
+            cleaned_read_events.pop(idx)
+            cleaned_produce_events.pop(idx)
             
-            produce_trigger = int(trigger)
-            read_trigger = int(trigger) - 100
-            all_read_events = [event for event in events if int(event[2]) == int(read_trigger)] # if the second index of the event is the read trigger, it gets put into read_events
-            all_produce_events = [event for event in events if int(event[2]) == int(produce_trigger)] #also it gets put into produce_triggres - wait why?
+        events_list = []
 
-            Epo = Epoching(mat_path, events) # initializes custom epoching class
+        all_read_events_covert = np.array([event for event in all_read_events if not Epo.is_overt(event)]) 
+        events_list.append(all_read_events_covert)
+        all_read_events_overt = np.array([event for event in all_read_events if Epo.is_overt(event)]) 
+        events_list.append(all_read_events_overt)
 
-            bad_idx = Epo.get_bad_syll(raw_path, sub, read_trigger, read_triggers, syllables, i) #gets the place where the syllables can't be read
+        all_produce_events_covert = np.array([event for event in all_produce_events if not Epo.is_overt(event)]) 
+        events_list.append(all_produce_events_covert)
+        all_produce_events_overt = np.array([event for event in all_produce_events if Epo.is_overt(event)])
+        events_list.append(all_produce_events_overt)
 
-            cleaned_read_events = all_read_events.copy()
-            cleaned_produce_events = all_produce_events.copy()
+        cleaned_read_events_covert = np.array([event for event in cleaned_read_events if not Epo.is_overt(event)]) 
+        events_list.append(cleaned_read_events_covert)
+        cleaned_read_events_overt = np.array([event for event in cleaned_read_events if Epo.is_overt(event)])
+        events_list.append(cleaned_read_events_overt)
 
-            for idx in bad_idx[::-1]:
-                cleaned_read_events.pop(idx)
-                cleaned_produce_events.pop(idx)
+        cleaned_produce_events_covert = [event for event in cleaned_produce_events if not Epo.is_overt(event)]
+        events_list.append(cleaned_produce_events_covert)
+        cleaned_produce_events_overt = [event for event in cleaned_produce_events if Epo.is_overt(event)]
+        events_list.append(cleaned_produce_events_overt)
 
-            events_list = []
+        picks = mne.pick_types(subject_raw.info, meg=True, eeg=False, stim=False, eog=False, ecg=False, misc=False) 
+        
+        for idx in range(len(events_list)): 
+            evs = events_list[idx]
+            if idx < 4:
+                cleaning = 'WITH_BADS'
+            elif idx > 3:
+                cleaning = 'WITHOUT_BADS'
+            if idx % 2 == 0:
+                condition = 'COVERT'
+            elif idx % 2 == 1:
+                condition = 'OVERT'
 
-            all_read_events_covert = np.array([event for event in all_read_events if not Epo.is_overt(event)]) 
-            events_list.append(all_read_events_covert)
-            all_read_events_overt = np.array([event for event in all_read_events if Epo.is_overt(event)]) 
-            events_list.append(all_read_events_overt)
+            if len(evs) > 0:
+                # make the epochs
+                epochs_main = mne.Epochs(
+                    subject_raw, 
+                    events=evs, 
+                    reject=reject_dict, 
+                    picks=picks, 
+                    baseline=None,
+                    tmin=epoch_tmin, 
+                    tmax=epoch_tmax, 
+                    preload=True
+                ) 
 
-            all_produce_events_covert = np.array([event for event in all_produce_events if not Epo.is_overt(event)]) 
-            events_list.append(all_produce_events_covert)
-            all_produce_events_overt = np.array([event for event in all_produce_events if Epo.is_overt(event)])
-            events_list.append(all_produce_events_overt)
+                # epochs_main.plot_drop_log()
 
-            cleaned_read_events_covert = np.array([event for event in cleaned_read_events if not Epo.is_overt(event)]) 
-            events_list.append(cleaned_read_events_covert)
-            cleaned_read_events_overt = np.array([event for event in cleaned_read_events if Epo.is_overt(event)])
-            events_list.append(cleaned_read_events_overt)
-
-            cleaned_produce_events_covert = [event for event in cleaned_produce_events if not Epo.is_overt(event)]
-            events_list.append(cleaned_produce_events_covert)
-            cleaned_produce_events_overt = [event for event in cleaned_produce_events if Epo.is_overt(event)]
-            events_list.append(cleaned_produce_events_overt)
-
-            picks = mne.pick_types(subject_raw.info, meg=True, eeg=False, stim=False, eog=False, ecg=False, misc=False) 
-            
-            for idx in range(len(events_list)): 
-                evs = events_list[idx]
-                if idx < 4:
-                    cleaning = 'WITH_BADS'
-                elif idx > 3:
-                    cleaning = 'WITHOUT_BADS'
-                if idx % 2 == 0:
-                    condition = 'COVERT'
-                elif idx % 2 == 1:
-                    condition = 'OVERT'
-
-                if len(evs) > 0:
-                    # make the epochs
-                    epochs_main = mne.Epochs(
-                        subject_raw, 
-                        events=evs, 
-                        reject=reject_dict, 
+                if len(epochs_main) != 0:
+                    ar = AutoReject(
+                        verbose=True, 
                         picks=picks, 
-                        baseline=None,
-                        tmin=epoch_tmin, 
-                        tmax=epoch_tmax, 
-                        preload=True
+                        n_jobs=3
                     ) 
+                    try:
+                        epochs_clean = ar.fit_transform(epochs_main) 
+                    except:
+                        epochs_clean = epochs_main 
 
-                    if len(epochs_main) != 0:
-                        ar = AutoReject(
-                            verbose=True, 
-                            picks=picks, 
-                            n_jobs=3
-                        ) 
-                        try:
-                            epochs_clean = ar.fit_transform(epochs_main) 
-                        except:
-                            epochs_clean = epochs_main 
+                    trigger_index = produce_triggers.index(produce_trigger)
+                    if len(epochs_clean) != 0:
+                        syll_label = epochs_main.events[0][2]
+                        
+                        cleaned_epoch_path = os.path.join(normalized_epoch_path, cleaning, condition)
+                        os.makedirs(cleaned_epoch_path, exist_ok=True)
 
-                        trigger_index = produce_triggers.index(produce_trigger)
-                        if len(epochs_clean) != 0:
-                            syll_label = epochs_main.events[0][2]
-                            
-                            cleaned_epoch_path = os.path.join(normalized_epoch_path, cleaning, condition)
-                            os.makedirs(cleaned_epoch_path, exist_ok=True)
+                        epochs_clean.save(
+                            os.path.join(cleaned_epoch_path, sub + '_' + block + '_' + syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'),
+                            overwrite=True,
+                        )
 
-                            epochs_clean.save(
-                                os.path.join(cleaned_epoch_path, sub+'_'+str(i)+'_'+syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'),
-                                overwrite=True,
-                            )
-
-            end = time.time()
-            print(f"Iteration duration: {end - start:.2f} seconds")
+        end = time.time()
+        print(f"Iteration duration: {end - start:.2f} seconds")
 
 
 if __name__ == "__main__":
