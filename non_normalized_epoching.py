@@ -9,7 +9,8 @@ from argparse import ArgumentParser
 from autoreject import AutoReject
 from pathlib import Path
 
-from BCOM_processing.SCRIPTS.functions import Epoching
+from preprocessing import Epoching
+#from BCOM_processing.SCRIPTS.functions import Epoching
 
 def baseline_cropper(raw, events, max_length=30):
     """
@@ -30,21 +31,7 @@ def baseline_cropper(raw, events, max_length=30):
 
     return baseline, (t1, t2)
 
-# paths
 bad_localization_channel = "MEG 173"
-root = "/Volumes/BCOM/" #"/pasteur/zeus/projets/p02/BCOM" #
-raw_path = op.join(root, "BCOM/DATA_RAW")
-preprocessed_path = op.join(root, "ciprian_project/data_analyzed/preprocessed")
-non_normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/non_normalized/data")
-# normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/normalized/data")
-baseline_path = op.join(root, "ciprian_project/data_analyzed/baselines")
-
-# triggers
-triggers_pd = pd.read_csv(os.path.join(root, "BCOM/PROTOCOL", 'trigger_labels.csv'), sep=';')
-produce_triggers = triggers_pd['produce_head'].to_list() #the csv already has names
-read_triggers = triggers_pd['read_head'].to_list()
-syllables = triggers_pd['syllable'].to_list()
-
 
 # epoch settings
 epoch_tmin=-0.4 # start
@@ -56,6 +43,7 @@ def main():
     parser = ArgumentParser()
     parser.add_argument("--subject", type=str, required=True, help="Subject name should be BCOM_XX/N")
     parser.add_argument("--save_baseline", action="store_true", required=False, help="use this flag if you want to save the baseline")
+    parser.add_argument("--root", type=str, required=True, help="Root of the directory the data is stored in, i.e., if launched from the server or locally")
     args = parser.parse_args()
 
     # make sure subject is of right format
@@ -63,6 +51,18 @@ def main():
     if parsed_subject[-2] != "/":
         raise ValueError("'/' not found in the right position - check subject help for proper formatting")
     ##########################
+    root = args.root 
+    raw_path = op.join(root, "BCOM/DATA_RAW")
+    preprocessed_path = op.join(root, "ciprian_project/data_analyzed/preprocessed")
+    non_normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/non_normalized/data")
+    # normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/normalized/data")
+    baseline_path = op.join(root, "ciprian_project/data_analyzed/baselines")
+
+    # triggers
+    triggers_pd = pd.read_csv(os.path.join(root, "BCOM/PROTOCOL", 'trigger_labels.csv'), sep=';')
+    produce_triggers = triggers_pd['produce_head'].to_list() #the csv already has names
+    read_triggers = triggers_pd['read_head'].to_list()
+    syllables = triggers_pd['syllable'].to_list()
 
     # get paths
     subject_raw_path = op.join(preprocessed_path, args.subject, "subject_cleaned_ica_raw.fif")
@@ -163,11 +163,24 @@ def main():
                     condition = 'OVERT'
 
                 if len(evs) > 0:
-                    epochs_main = mne.Epochs(subject_raw, events=evs, reject=reject_dict, picks=picks, baseline=None,
-                                        tmin=epoch_tmin, tmax=epoch_tmax, preload=True) 
+                    epochs_main = mne.Epochs(
+                        subject_raw, 
+                        events=evs, 
+                        reject=reject_dict, 
+                        picks=picks, 
+                        baseline=None,
+                        tmin=epoch_tmin, 
+                        tmax=epoch_tmax, 
+                        preload=True,
+                    ) 
 
                     if len(epochs_main) != 0:
-                        ar = AutoReject(verbose=True, picks=picks, n_jobs=3)
+                        ar = AutoReject(
+                            verbose=True, 
+                            picks=picks, 
+                            n_jobs=3
+                        )
+
                         try:
                             epochs_clean = ar.fit_transform(epochs_main)
                         except:
@@ -180,12 +193,13 @@ def main():
                             cleaned_epoch_path = os.path.join(non_normalized_epoch_path, cleaning, condition)
                             os.makedirs(cleaned_epoch_path, exist_ok=True)
 
-                            epochs_clean.save(os.path.join(cleaned_epoch_path, sub+'_'+str(i)+'_'+syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'))
+                            epochs_clean.save(
+                                os.path.join(cleaned_epoch_path, sub+'_'+str(i)+'_'+syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'),
+                                overwrite=True,
+                            )
 
             end = time.time()
             print(f"Iteration duration: {end - start:.2f} seconds")
-            break
-        break
 
 
 if __name__ == "__main__":
