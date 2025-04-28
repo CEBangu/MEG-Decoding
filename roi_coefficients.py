@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--speech_type', type=str, required=True, help="Covert or Overt?")
     parser.add_argument('--data_dir', type=str, help="Directory where the data is stored")
     parser.add_argument('--save_dir', type=str, required=True, help="Directory to save the coefficients")
+    parser.add_argument('--empty_room_dir', type=str, required=True, help="Directory where the baselines are stored")
     parser.add_argument('--mne_dir', type=str, help="where fsaverage is located")
 
     args = parser.parse_args()
@@ -95,23 +96,13 @@ def main():
     }
 
     ##################################
-    # Setting up common source space #
+    # Setting up fsaverage source space #
     ##################################
 
-    common_subject = 'fsaverage'
-    source = mne.setup_source_space(
-        subject=common_subject, # only once, no co-registration
-        spacing='oct6',
+    fs_average_source_space = mne.setup_source_space(
+        subject='fsaverage', # only once, no co-registration
+        spacing='ico5',
         add_dist=False,
-    )
-
-    bem = mne.make_bem_solution(
-        mne.make_bem_model(
-        subject=common_subject,
-        ico=4,
-        conductivity=(0.3, ),
-        subjects_dir=subjects_dir
-        )
     )
 
     ##############################
@@ -124,49 +115,81 @@ def main():
     subjects = args.subject_list
     avoid_reading = args.avoid_reading
     avoid_producing = args.avoid_producing
+    empty_room_dir = args.empty_room_dir
 
     save_dir = args.save_dir
 
-
+    bad_localization_channel = "MEG 173"
+    
     data = BcomMEG(dir=data_dir,
                 subjects=subjects,
                 avoid_reading=avoid_reading,
                 avoid_producing=avoid_producing,
                 )
+    
+    scaled = "scaled_fsaverage"
 
     for subject in data.data: # loop through the subjects (blocks, really)
+        # we have the morphed transformations, so we will load them for the subject
+        morphed_trans = f"WHAT DIRECTORY DOES THIS END UP BEING?/trans/{subject}-trans.fif"
+        morphed_source = f"WHAT DIRECTORY DOES THIS END UP BEING?/mne_data/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-ico-5-src.fif"
+        morphed_bem = f"WHAT DIRECTORY DOES THIS END UP BEING?/mne_data/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-5120-5120-5120-bem-sol.fif"
+        
         # forward solution by block
         first_epoch_name = list(data.data[subject].keys())[0]
         fwd_solution_epoch = data.data[subject][first_epoch_name]
+
+
         fwd_solution = mne.make_forward_solution(
             fwd_solution_epoch.info,
-            trans=common_subject,
-            src=source,
-            bem=bem,
+            trans=morphed_trans,
+            src=morphed_source,
+            bem=morphed_bem,
             meg=True,
             eeg=False,
         )
         
-        # covariance matrix
-        cov = mne.compute_covariance(
-            fwd_solution_epoch,
-            tmin=-0.3,
-            tmax=-0.2,
-            method='empirical',
+        # need to get the covariance matrix from the empty_room recording 
+        subject_empty_room = os.path.join(empty_room_dir, subject[:7], subject[-1], subject + "baseline_raw.fif")
+
+        empty_room_raw = mne.io.read_raw_fif(
+            subject_empty_room,
+            preload=True,
         )
+        
+        empty_room_raw.interpolate_bads(exclude=[bad_localization_channel], origin=(0., 0., 0.))
+        
+        noise_cov = mne.compute_raw_covariance(
+            empty_room_raw,
+            method="auto",
+            rank=None,
+            picks="meg",
+        )
+
 
         inverse_operator = mne.minimum_norm.make_inverse_operator(
             fwd_solution_epoch.info,
             fwd_solution,
-            cov,
+            noise_cov,
             loose=0.2,
             depth=0.8,
+        ) 
+
+        morph = mne.compute_source_morph(
+            src=inverse_operator['src'],
+            subject_from=f"{scaled}_{subject}",
+            subject_to='fsaverage',
+            subjects_dir=subjects_dir,
+            src_to=fs_average_source_space,
         )
 
-        snr = 2.0
+        snr = 3.0
         lambda2 = 1.0/snr**2
 
         for syllable in data.data[subject]:  # loop through the syllables to get the inverse solution for each set
+            
+            data.data[subject][syllable].crop(tmin=-0.2, tmax=0.6)
+
             stc = mne.minimum_norm.apply_inverse_epochs(
                 data.data[subject][syllable],  # these are all epoch.fif objects
                 inverse_operator=inverse_operator,
@@ -174,18 +197,22 @@ def main():
                 method='eLORETA',
             )
 
+            # we need to morph it back to fsaverage to be able to use the parcelation
+
+            morphed_stc = morph.apply(stc)
+
             # set up array to store the different ROIs
-            
-            roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, 241]) # num labels x num epochs x coefficient array
+            n_time_points = data.data[subject][syllable][0].copy().get_data().shape[-1]
+            roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, n_time_points]) # num labels x num epochs x coefficient array
             print(roi_array.shape)
 
             for i, label in enumerate(label_dictionary): #for each ROI get the timecourse
                 print(f"getting timecourse for {label}")
 
                 label_time_courses = mne.extract_label_time_course(
-                    stc,
+                    morphed_stc,
                     label_dictionary[label],
-                    src=source,
+                    src=fs_average_source_space,
                     mode='mean_flip',
                     return_generator=False,
                 )
