@@ -54,7 +54,7 @@ def main():
     root = args.root 
     raw_path = op.join(root, "BCOM/DATA_RAW")
     preprocessed_path = op.join(root, "ciprian_project/data_analyzed/preprocessed")
-    non_normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/non_normalized/epoch_test") #TODO: change this back when debugging is done!
+    non_normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/non_normalized/data")
     # normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/normalized/data")
     baseline_path = op.join(root, "ciprian_project/data_analyzed/baselines")
 
