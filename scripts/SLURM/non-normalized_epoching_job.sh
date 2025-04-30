@@ -3,7 +3,7 @@
 #SBATCH --output=epoching_logs/non_norm_%A_%a.out
 #SBATCH --error=epoching_logs/non_norm_%A_%a.err
 #SBATCH --partition=common # partition
-#SBATCH --qos=superfast #superfast might be cutting it close, but we'll see how fast it is on the good machines
+#SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
 #SBATCH --nodes=1 # number of nodes
 #SBATCH --ntasks=1 # number of tasks
 #SBATCH --cpus-per-task=3 # auotreject has job options
