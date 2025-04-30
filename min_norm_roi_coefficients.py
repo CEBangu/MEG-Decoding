@@ -131,9 +131,9 @@ def main():
 
     for subject in data.data: # loop through the subjects (blocks, really)
         # we have the morphed transformations, so we will load them for the subject
-        morphed_trans = f"WHAT DIRECTORY DOES THIS END UP BEING?/trans/{subject}-trans.fif"
-        morphed_source = f"WHAT DIRECTORY DOES THIS END UP BEING?/mne_data/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-ico-5-src.fif"
-        morphed_bem = f"WHAT DIRECTORY DOES THIS END UP BEING?/mne_data/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-5120-5120-5120-bem-sol.fif"
+        morphed_trans = f"/pasteur/appa/scratch/cbangu/trans/{subject}-trans.fif"
+        morphed_source = f"/pasteur/appa/scratch/cbangu/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-ico-5-src.fif"
+        morphed_bem = f"/pasteur/appa/scratch/cbangu/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-5120-5120-5120-bem-sol.fif"
         
         # forward solution by block
         first_epoch_name = list(data.data[subject].keys())[0]
@@ -233,7 +233,7 @@ def main():
                     reshaped_result = reshaped_result.squeeze()
                     # print(reshaped_result.shape)
                     # print(tc.shape[1]) # scales x timepoints 
-                    reshaped_result = reshaped_result[:, :tc.shape[1]]
+                    reshaped_result = reshaped_result[:, :tc.shape[1]] # getting rid of aliasing
                     # print(reshaped_result.shape)
                     roi_array[i, j] = reshaped_result
 
