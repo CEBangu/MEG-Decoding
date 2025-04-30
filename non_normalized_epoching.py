@@ -132,8 +132,7 @@ def main():
                 np.array([event for event in all_produce_events if Epo.is_overt(event)])
             ],
             "COVERT": [
-                np.array([event for event in all_read_events if not Epo.is_overt(event)]), 
-                np.array([event for event in all_read_events if Epo.is_overt(event)]),
+                np.array([event for event in all_read_events]),
                 np.array([event for event in all_produce_events if not Epo.is_overt(event)]),
             ],
         }
@@ -143,8 +142,7 @@ def main():
                 np.array([event for event in cleaned_produce_events if Epo.is_overt(event)])
             ],
             "COVERT": [
-                np.array([event for event in cleaned_read_events if not Epo.is_overt(event)]),
-                np.array([event for event in cleaned_read_events if Epo.is_overt(event)]),
+                np.array([event for event in cleaned_read_events]),
                 np.array([event for event in cleaned_produce_events if not Epo.is_overt(event)]),
             ],
         }
