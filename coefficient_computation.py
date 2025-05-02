@@ -48,7 +48,7 @@ def main():
     
     
     # CWT Reconstruction variables - better to compute as much outside the loop b/c lots of repetitions
-    sampling_rate = 300 # data already downsampled to 300 at this point
+    sampling_rate = 500 # data already downsampled to 500 at this point
     log_samples = 100 # we want 100 coefficients
     cwt_wavelet_name = 'cmor' # reconstruction wavelet
     B = 1.0 # wavelet bandwith (higher means more frequencies at each scale, but less precision in peak timing)
@@ -75,7 +75,7 @@ def main():
                 )
                 
                 for channel, coefficients in enumerate(results):
-                    all_coefficients[epoch, channel] = coefficients
+                    all_coefficients[epoch, channel] = coefficients #TODO: BASELINE NORMALIZATION FOR THIS ACTUALLY
 
                 # Old code - just in case this doesn't work lol
                 # for channel in range(data.data[subject][syllable].shape[1]):
