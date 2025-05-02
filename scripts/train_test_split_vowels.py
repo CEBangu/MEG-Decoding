@@ -70,7 +70,7 @@ def main():
             filename_train = f'{unpacked_filename[0]}_all_{args.dimensions}_Kfold_train.csv'
             filename_test = f'{unpacked_filename[0]}_all_{args.dimensions}_test.csv'
         
-        if len(args.class_tag)
+        if args.class_tag:
             filename_train = args.class_tag + "_" + filename_train
             filename_test = args.class_tag + "_" + filename_test
 

@@ -15,7 +15,11 @@ def main():
     args = parser.parse_args()
     
     # label dictionary - maybe it would be better to do a label2id but i set up all the scripts to work like this so i don't want to break anything now/
-    vowels = {'a': 0, 'e': 1, 'i': 2}
+    vowels = {
+        'a': 0, 
+        'e': 1, 
+        'i': 2
+    }
 
     # combining vowels and consonants, but labeled by vowels
     
