@@ -1,5 +1,6 @@
 import mne
 import os
+import pywt
 import numpy as np
 from wavelets import process_channel, save_coefficient_results
 from mne import set_config
@@ -17,6 +18,8 @@ def main():
     parser.add_argument('--save_dir', type=str, required=True, help="Directory to save the coefficients")
     parser.add_argument('--empty_room_dir', type=str, required=True, help="Directory where the empty room recordings are stored")
     parser.add_argument('--baseline_dir', type=str, required=True, help='directory where baselines are stored')
+    parser.add_argument('--trans_dir', type=str, help="directory where the MRI transformations are stored")
+    parser.add_argument('--raw_dir', type=str, help="where the raw files are stored")
     parser.add_argument('--mne_dir', type=str, help="where fsaverage is located")
 
     args = parser.parse_args()
@@ -107,11 +110,16 @@ def main():
 
     speech_type = args.speech_type.upper()
     data_dir = args.data_dir
+    covert_dir = os.path.join(data_dir, "COVERT")
+    overt_dir = os.path.join(data_dir, "OVERT")
     data_dir = os.path.join(data_dir, speech_type)
     subjects = args.subject_list
     avoid_reading = args.avoid_reading
     avoid_producing = args.avoid_producing
     empty_room_dir = args.empty_room_dir
+    mne_dir = args.mne_dir
+    trans_dir = args.trans_dir
+    raw_dir = args.raw_dir
 
     save_dir = args.save_dir
 
@@ -127,163 +135,180 @@ def main():
 
     for subject in data.data: # loop through the subjects (blocks, really)
             
-            # we have the morphed transformations, so we will load them for the subject
-            morphed_trans = f"/pasteur/appa/scratch/cbangu/trans/{subject}-trans.fif"
-            morphed_source = f"/pasteur/appa/scratch/cbangu/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-ico-5-src.fif"
-            morphed_bem = f"/pasteur/appa/scratch/cbangu/MNE-fsaverage-data/{scaled}_{subject}/bem/{scaled}_{subject}-5120-5120-5120-bem-sol.fif"
-            
-            # forward solution by block
-            first_epoch_name = list(data.data[subject].keys())[0]
-            fwd_solution_epoch = data.data[subject][first_epoch_name]
+        # we have the morphed transformations, so we will load them for the subject
+        morphed_trans = os.path.join(trans_dir, f"{subject}-trans.fif")
+        morphed_source = os.path.join(mne_dir, f"{scaled}_{subject}/bem/{scaled}_{subject}-ico-5-src.fif")
+        morphed_bem = os.path.join(mne_dir, f"{scaled}_{subject}/bem/{scaled}_{subject}-5120-5120-5120-bem-sol.fif")
+        
+        # forward solution by block
+        first_epoch_name = list(data.data[subject].keys())[0]
+        fwd_solution_epoch = data.data[subject][first_epoch_name]
 
-            fwd_solution = mne.make_forward_solution(
-                fwd_solution_epoch.info,
-                trans=morphed_trans,
-                src=morphed_source,
-                bem=morphed_bem,
-                meg=True,
-                eeg=False,
+        fwd_solution = mne.make_forward_solution(
+            fwd_solution_epoch.info,
+            trans=morphed_trans,
+            src=morphed_source,
+            bem=morphed_bem,
+            meg=True,
+            eeg=False,
+        )
+
+        #####################
+        # noise covariance #
+        ####################
+        
+        sub = subject[:7]
+        block = subject[-1]
+
+        # need to get the covariance matrix from the empty_room recording 
+        subject_empty_room = os.path.join(empty_room_dir, sub, block, "empty_room_cleaned_ICA_raw.fif")
+
+        empty_room_raw = mne.io.read_raw_fif(
+            subject_empty_room,
+            preload=True,
+        )
+        
+        empty_room_raw.interpolate_bads(exclude=[bad_localization_channel], origin=(0., 0., 0.))
+        
+        noise_cov = mne.compute_raw_covariance(
+            empty_room_raw,
+            method="auto",
+            rank="info",
+            picks="meg",
+        )
+
+        #################
+        # get baseline #
+        ################
+
+        subject_baseline = os.path.join(args.baseline_dir, sub, f"{subject}_baseline_raw.fif")
+        baseline = mne.io.read_raw_fif(subject_baseline, preload=True)
+        baseline.pick_types(meg=True)
+
+
+        ###################
+        # data covariance #
+        ###################
+        
+        raw = mne.io.read_raw_fif(fname=os.path.join(raw_dir, f"{sub}/{block}/subject_cleaned_ica_raw.fif"))
+        
+        epochs_array = []
+        dropped_epochs = []
+        
+
+        
+        for file in os.listdir(covert_dir):
+            if subject in file:
+                file_path = os.path.join(covert_dir, file)
+                epoch = mne.read_epochs(file_path)
+                if epoch.info['dev_head_t'] != raw.info['dev_head_t']:
+                        dropped_epochs.append(("Covert", file, len(epoch.events)))
+                else:
+                        epochs_array.append(epoch)
+        for file in os.listdir(overt_dir):
+            if subject in file:
+                file_path = os.path.join(covert_dir, file)
+                epoch = mne.read_epochs(file_path)
+                if epoch.info['dev_head_t'] != raw.info['dev_head_t']:
+                    dropped_epochs.append(("Overt", file, len(epoch.events)))
+                else:
+                    epochs_array.append(epoch)                 
+                
+        epochs_array = mne.concatenate_epochs(epochs_array)
+
+
+        data_cov = mne.compute_covariance(
+                epochs_array.crop(tmin=-0.2, tmax=0.6), 
+                method="auto", 
+                rank="info"
             )
 
-            #####################
-            # noise covariance #
-            ####################
-            
-            sub = subject[:7]
-            block = subject[-1]
 
-            # need to get the covariance matrix from the empty_room recording 
-            subject_empty_room = os.path.join(empty_room_dir, sub, block, "empty_room_cleaned_ICA_raw.fif")
+        ####################
+        #    beamforming   #
+        ####################
 
-            empty_room_raw = mne.io.read_raw_fif(
-                subject_empty_room,
-                preload=True,
-            )
-            
-            empty_room_raw.interpolate_bads(exclude=[bad_localization_channel], origin=(0., 0., 0.))
-            
-            noise_cov = mne.compute_raw_covariance(
-                empty_room_raw,
-                method="auto",
+        filters = mne.beamformer.make_lcmv(
+                epochs_array.info,
+                fwd_solution,
+                data_cov,
+                reg=0.05,
+                noise_cov=noise_cov,
+                pick_ori="max-power",
+                weight_norm="unit-noise-gain",
                 rank="info",
-                picks="meg",
-            )
-
-            #################
-            # get baseline #
-            ################
-
-            subject_baseline = os.path.join(args.baseline_dir, sub, f"{subject}_baseline_raw.fif")
-            baseline = mne.io.read_raw_fif(subject_baseline, preload=True)
-            baseline.pick_types(meg=True)
+        )
 
 
-            ###################
-            # data covariance #
-            ###################
+        del epochs_array
+        del raw
+
+        ###########################
+        # now on the actual data # 
+        ###########################
+
+        recon_baseline = mne.beamformer.apply_lcmv_raw(baseline, filters)
+
+        morph = mne.compute_source_morph(
+            src=morphed_source,
+            subject_from=f"{scaled}_{subject}",
+            subject_to="fsaverage",
+            subjects_dir=subjects_dir,
+        )
+
+        morphed_baseline = morph.apply(recon_baseline)
+
+
+        for syllable in data.data[subject]:
+            data.data[subject][syllable].crop(tmin=-0.2, tmax=0.6)
+
+            recon_task = mne.beamformer.apply_lcmv_epochs(data.data[subject][syllable], filters)
+
+            morphed_time_courses = [morph.apply(stc) for stc in recon_task]
+
+            n_time_points = data.data[subject][syllable][0].copy().get_data().shape[-1]
+        
+            roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, n_time_points])
             
-            raw = mne.io.read_raw_fif(fname=f"/pasteur/zeus/projets/p02/BCOM/ciprian_project/data_analyzed/preprocessed/{sub}/{block}/subject_cleaned_ica_raw.fif")
-            
-            epochs_array = []
-            dropped_epochs = []
+            for i, label in enumerate(label_dictionary):
+                print(f"getting timecourse for {label}")
 
-            covert_dir = "/pasteur/zeus/projets/p02/BCOM/ciprian_project/data_analyzed/non_normalized/data/WITHOUT_BADS/COVERT"
-            overt_dir = "/pasteur/zeus/projets/p02/BCOM/ciprian_project/data_analyzed/non_normalized/data/WITHOUT_BADS/OVERT"
-            
-            for file in os.listdir(covert_dir):
-                if subject in file:
-                    file_path = os.path.join(covert_dir, file)
-                    epoch = mne.read_epochs(file_path)
-                    if epoch.info['dev_head_t'] != raw.info['dev_head_t']:
-                            dropped_epochs.append(("Covert", file, len(epoch.events)))
-                    else:
-                            epochs_array.append(epoch)
-            for file in os.listdir(overt_dir):
-                if subject in file:
-                    file_path = os.path.join(covert_dir, file)
-                    epoch = mne.read_epochs(file_path)
-                    if epoch.info['dev_head_t'] != raw.info['dev_head_t']:
-                        dropped_epochs.append(("Overt", file, len(epoch.events)))
-                    else:
-                        epochs_array.append(epoch)                 
-                    
-            epochs_array = mne.concatenate_epochs(epochs_array)
-
-
-            data_cov = mne.compute_covariance(
-                 epochs_array.crop(tmin=-0.2, tmax=0.6), 
-                 method="auto", 
-                 rank="info"
+                label_time_courses_condition = mne.extract_label_time_course(
+                    morphed_time_courses,
+                    label_dictionary[label],
+                    src=fs_average_source_space,
+                    mode="mean_flip",
+                    return_generator=False,
                 )
 
+                label_time_course_baseline = mne.extract_label_time_course(
+                    morphed_baseline,
+                    label_dictionary[label],
+                    src=fs_average_source_space,
+                    mode="mean_flip",
+                    return_generator=False,
+                )
 
-            ####################
-            #    beamforming   #
-            ####################
+                baseline_tf = process_channel(
+                    signal=label_time_course_baseline,
+                    cwt_wavelet=cwt_wavelet,
+                    scales=scales,
+                    sampling_period=sampling_period,
+                    dwt_wavelet_name=dwt_wavelet_name,
+                    level=level,
+                )
 
-            filters = mne.beamformer.make_lcmv(
-                 epochs_array.info,
-                 fwd_solution,
-                 data_cov,
-                 reg=0.05,
-                 noise_cov=noise_cov,
-                 pick_ori="max-power",
-                 weight_norm="unit-noise-gain",
-                 rank="info",
-            )
+                reshaped_baseline = np.transpose(baseline_tf, (0, 2, 1))
+                reshaped_baseline = reshaped_baseline.squeeze()
+                reshaped_baseline = reshaped_baseline[:, :label_time_course_baseline.shape[1]]
 
+                baseline_row_mean = reshaped_baseline.mean(axis=1, keepdims=True)
+                baseline_row_std = reshaped_baseline.std(axis=1, keepdims=True)
 
-            del epochs_array
-            del raw
-
-            ###########################
-            # now on the actual data # 
-            ###########################
-
-            recon_baseline = mne.beamformer.apply_lcmv_raw(baseline, filters)
-
-            morph = mne.compute_source_morph(
-                src=morphed_source,
-                subject_from=f"{scaled}_{subject}",
-                subject_to="fsaverage",
-                subjects_dir=subjects_dir,
-            )
-
-            morphed_baseline = morph.apply(recon_baseline)
-
-
-            for syllable in data.data[subject]:
-                data.data[subject][syllable].crop(tmin=-0.2, tmax=0.6)
-
-                recon_task = mne.beamformer.apply_lcmv_epochs(data.data[subject][syllable], filters)
-
-                morphed_time_courses = [morph.apply(stc) for stc in recon_task]
-
-                n_time_points = data.data[subject][syllable][0].copy().get_data().shape[-1]
-            
-                roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, n_time_points])
                 
-                for i, label in enumerate(label_dictionary):
-                    print(f"getting timecourse for {label}")
-
-                    label_time_courses_condition = mne.extract_label_time_course(
-                        morphed_time_courses,
-                        label_dictionary[label],
-                        src=fs_average_source_space,
-                        mode="mean_flip",
-                        return_generator=False,
-                    )
-
-                    label_time_course_baseline = mne.extract_label_time_course(
-                        morphed_baseline,
-                        label_dictionary[label],
-                        src=fs_average_source_space,
-                        mode="mean_flip",
-                        return_generator=False,
-                    )
-
-                    baseline_tf = process_channel(
-                        signal=label_time_course_baseline,
+                for j, tc in enumerate(label_time_courses_condition):
+                    result_condition = process_channel(
+                        signal=tc,
                         cwt_wavelet=cwt_wavelet,
                         scales=scales,
                         sampling_period=sampling_period,
@@ -291,38 +316,21 @@ def main():
                         level=level,
                     )
 
-                    reshaped_baseline = np.transpose(baseline_tf, (0, 2, 1))
-                    reshaped_baseline = reshaped_baseline.squeeze()
-                    reshaped_baseline = reshaped_baseline[:, :label_time_course_baseline.shape[1]]
+                    reshaped_result = np.transpose(result_condition, (0, 2, 1))
+                    reshaped_result = reshaped_result.squeeze()
+                    reshaped_result = reshaped_result[:, :tc.shape[1]] 
 
-                    baseline_row_mean = reshaped_baseline.mean(axis=1, keepdims=True)
-                    baseline_row_std = reshaped_baseline.std(axis=1, keepdims=True)
+                    normalized_result = (reshaped_result - baseline_row_mean) / baseline_row_std
 
-                    
-                    for j, tc in enumerate(label_time_courses_condition):
-                        result_condition = process_channel(
-                            signal=tc,
-                            cwt_wavelet=cwt_wavelet,
-                            scales=scales,
-                            sampling_period=sampling_period,
-                            dwt_wavelet_name=dwt_wavelet_name,
-                            level=level,
-                        )
+                    roi_array[i, j] = normalized_result
 
-                        reshaped_result = np.transpose(result_condition, (0, 2, 1))
-                        reshaped_result = reshaped_result.squeeze()
-                        reshaped_result = reshaped_result[:, :tc.shape[1]] 
+                save_coefficient_results(
+                    subject=subject,
+                    syllable=syllable,
+                    all_coefficients=roi_array,
+                    save_dir=save_dir
+                    )
 
-                        normalized_result = (reshaped_result - baseline_row_mean) / baseline_row_std
-
-                        roi_array[i, j] = normalized_result
-
-                    save_coefficient_results(
-                        subject=subject,
-                        syllable=syllable,
-                        all_coefficients=roi_array,
-                        save_dir=save_dir
-                        )
 
 if __name__ == "__main__":
     main()
