@@ -19,7 +19,9 @@ def dir_to_dataframe(data_dir, vowel2id, speech2id, voweltype2id):
         if ".png" in file:
             file_path = op.join(data_dir, file)
             parsed_file = file.split("_")
-            label = parsed_file[3]
+            
+            label = parsed_file[3][1] if len(parsed_file[3]) > 1 else parsed_file[3][0]
+
             if label in vowel2id:
                 label = int(vowel2id[label])
             else:
@@ -52,10 +54,16 @@ def main():
     root = args.root
     data_type = args.data_type
 
+    covert_root_path = op.join(root, "covert", data_type)
+    overt_root_path = op.join(root, "overt", data_type)
     covert_data_path = op.join(root, "covert", data_type, "data")
     overt_data_path = op.join(root, "overt", data_type, "data")
     covert_covert_path = op.join(root, "covert_covert", data_type, "train_test_split")
     covert_overt_path = op.join(root, "covert_overt", data_type, "train_test_split")
+
+    os.makedirs(covert_covert_path, exist_ok=True)
+    os.makedirs(covert_overt_path, exist_ok=True)
+
 
     ##############
     # tags #
@@ -127,14 +135,15 @@ def main():
     for df in [covert_pure_train_all, covert_pure_test_all, covert_pure_train_producing, covert_pure_test_producing]:
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
-        df = df.drop_columns(["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
 
     # save dataframes
-    covert_pure_train_all.to_csv(op.join(covert_data_path, "train_test_split", "covert_pure_train_all.csv"), index=False)
-    covert_pure_test_all.to_csv(op.join(covert_data_path, "train_test_split", "covert_pure_test_all.csv"), index=False)
-    covert_pure_train_producing.to_csv(op.join(covert_data_path, "train_test_split", "covert_pure_train_producing.csv"), index=False)
-    covert_pure_test_producing.to_csv(op.join(covert_data_path, "train_test_split", "covert_pure_test_producing.csv"), index=False)
+    covert_pure_train_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_train_all.csv"), index=False)
+    covert_pure_test_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_test_all.csv"), index=False)
+    covert_pure_train_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_train_producing.csv"), index=False)
+    covert_pure_test_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_test_producing.csv"), index=False)
 
+    print("Covert pure vowels train test split done")
 
     ##########################################################################################################################################
 
@@ -161,12 +170,14 @@ def main():
     for df in [covert_composite_train_all, covert_composite_test_all, covert_composite_train_producing, covert_composite_test_producing]:
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
-        df = df.drop_columns(["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
 
-    covert_composite_train_all.to_csv(op.join(covert_data_path, "train_test_split", "covert_composite_train_all.csv"), index=False)
-    covert_composite_test_all.to_csv(op.join(covert_data_path, "train_test_split", "covert_composite_test_all.csv"), index=False)
-    covert_composite_train_producing.to_csv(op.join(covert_data_path, "train_test_split", "covert_composite_train_producing.csv"), index=False)
-    covert_composite_test_producing.to_csv(op.join(covert_data_path, "train_test_split", "covert_composite_test_producing.csv"), index=False)
+    covert_composite_train_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_train_all.csv"), index=False)
+    covert_composite_test_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_test_all.csv"), index=False)
+    covert_composite_train_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_train_producing.csv"), index=False)
+    covert_composite_test_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_test_producing.csv"), index=False)
+
+    print("Covert composite vowels train test split done")
 
 
     #############################################################################################################################################
@@ -186,11 +197,12 @@ def main():
     for df in [overt_pure_train_producing, overt_pure_test_producing]:
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
-        df = df.drop_columns(["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
 
-    overt_pure_train_producing.to_csv(op.join(overt_data_path, "train_test_split", "overt_pure_train_producing.csv"), index=False)
-    overt_pure_test_producing.to_csv(op.join(overt_data_path, "train_test_split", "overt_pure_test_producing.csv"), index=False)
+    overt_pure_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_train_producing.csv"), index=False)
+    overt_pure_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_test_producing.csv"), index=False)
 
+    print("Overt pure vowels train test split done")
     #############################################################################################################################################
 
     # overt composite vowels
@@ -207,10 +219,12 @@ def main():
     for df in [overt_composite_train_producing, overt_composite_test_producing]:
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
-        df = df.drop_columns(["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
 
-    overt_composite_train_producing.to_csv(op.join(overt_data_path, "train_test_split", "overt_composite_train_producing.csv"), index=False)
-    overt_composite_test_producing.to_csv(op.join(overt_data_path, "train_test_split", "overt_composite_test_producing.csv"), index=False)
+    overt_composite_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_train_producing.csv"), index=False)
+    overt_composite_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_test_producing.csv"), index=False)
+
+    print("Overt composite vowels train test split done")
 
     #############################################################################################################################################
 
@@ -235,16 +249,19 @@ def main():
     )
 
     for df in [covert_covert_pure_train, covert_covert_pure_test, covert_covert_all_train, covert_covert_all_test]:
-        df = df.drop_columns(["Label", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
         df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
 
 
-    covert_covert_pure_train.to_csv(op.join(covert_covert_path, "train_test_split", "covert_covert_pure_train.csv"), index=False)
-    covert_covert_pure_test.to_csv(op.join(covert_covert_path, "train_test_split", "covert_covert_pure_test.csv"), index=False)
-    covert_covert_all_train.to_csv(op.join(covert_covert_path, "train_test_split", "covert_covert_all_train.csv"), index=False)
-    covert_covert_all_test.to_csv(op.join(covert_covert_path, "train_test_split", "covert_covert_all_test.csv"), index=False)
+    covert_covert_pure_train.to_csv(op.join(covert_covert_path,"covert_covert_pure_train.csv"), index=False)
+    covert_covert_pure_test.to_csv(op.join(covert_covert_path, "covert_covert_pure_test.csv"), index=False)
+    print("Covert covert pure train test split done")
+    covert_covert_all_train.to_csv(op.join(covert_covert_path, "covert_covert_all_train.csv"), index=False)
+    covert_covert_all_test.to_csv(op.join(covert_covert_path, "covert_covert_all_test.csv"), index=False)
+    print("Covert covert all train test split done")
+    
 
     #############################################################################################################################################
 
@@ -283,28 +300,30 @@ def main():
         shuffle=True,
     )
     for df in [covert_prod_overt_prod_train_all, covert_prod_overt_prod_test_all, covert_prod_overt_prod_pure_train, covert_prod_overt_prod_pure_test]:
-        df = df.drop_columns(["Label", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
         df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
 
-    covert_prod_overt_prod_train_all.to_csv(op.join(covert_overt_path, "train_test_split", "covert_prod_overt_prod_train.csv"), index=False)
-    covert_prod_overt_prod_test_all.to_csv(op.join(covert_overt_path, "train_test_split", "covert_prod_overt_prod_test.csv"), index=False)
-    covert_prod_overt_prod_pure_train.to_csv(op.join(covert_overt_path, "train_test_split", "covert_prod_overt_prod_pure_train.csv"), index=False)
-    covert_prod_overt_prod_pure_test.to_csv(op.join(covert_overt_path, "train_test_split", "covert_prod_overt_prod_pure_test.csv"), index=False)
+    covert_prod_overt_prod_train_all.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_train.csv"), index=False)
+    covert_prod_overt_prod_test_all.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_test.csv"), index=False)
+    print("Covert producing vs overt producing train test split done")
+    covert_prod_overt_prod_pure_train.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_pure_train.csv"), index=False)
+    covert_prod_overt_prod_pure_test.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_pure_test.csv"), index=False)
+    print("Covert producing vs overt producing pure train test split done")
     #############################################################################################################################################
 
     # covert reading vs overt producing
 
     covert_reading_pure = (
         covert_dataframe
-        .query("Vowel_Type == 'pure' and Speech_Type == 'reading'")
+        .query("Vowel_Type == 'pure' and Speech_Type == 0")
         .sample(n=n_samples, random_state=42)
         .reset_index(drop=True)
     )
     covert_reading_all = (
         covert_dataframe
-        .query("Speech_Type == 'reading'")
+        .query("Speech_Type == 0")
         .sample(n_samples, random_state=42)
         .reset_index(drop=True)
     )
@@ -328,16 +347,18 @@ def main():
         shuffle=True,
     )
     for df in [covert_read_overt_prod_train_all, covert_read_overt_prod_test_all, covert_read_overt_prod_pure_train, covert_read_overt_prod_pure_test]:
-        df = df.drop_columns(["Label", "Vowel_Type"]) # drop unnecessary columns
+        df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
         df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
 
-    covert_read_overt_prod_train_all.to_csv(op.join(covert_overt_path, "train_test_split", "covert_read_overt_prod_train.csv"), index=False)
-    covert_read_overt_prod_test_all.to_csv(op.join(covert_overt_path, "train_test_split", "covert_read_overt_prod_test.csv"), index=False)
+    covert_read_overt_prod_train_all.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_train.csv"), index=False)
+    covert_read_overt_prod_test_all.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_test.csv"), index=False)
+    print("Covert reading vs overt producing train test split done")
 
-    covert_read_overt_prod_pure_train.to_csv(op.join(covert_overt_path, "train_test_split", "covert_read_overt_prod_pure_train.csv"), index=False)
-    covert_read_overt_prod_pure_test.to_csv(op.join(covert_overt_path, "train_test_split", "covert_read_overt_prod_pure_test.csv"), index=False)
+    covert_read_overt_prod_pure_train.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_pure_train.csv"), index=False)
+    covert_read_overt_prod_pure_test.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_pure_test.csv"), index=False)
+    print("Covert reading vs overt producing pure train test split done")
 
     #############################################################################################################################################
 
