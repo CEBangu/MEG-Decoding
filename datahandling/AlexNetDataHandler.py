@@ -20,7 +20,7 @@ class AlexNetDataHandler(Dataset):
     def __len__(self):
         return len(self.data)
     
-    def __getitem__(self, idx):
+    def __getitem__(self, idx): #TODO: update this to account for the fact that the paths are stored for the individual images - no need for any joining
         img_path = os.path.join(self.img_directory, str(self.data.iloc[idx, 0]))
         label = int(self.data.iloc[idx, 1])
 
