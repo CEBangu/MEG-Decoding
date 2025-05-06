@@ -132,10 +132,19 @@ def main():
     )
 
     # clean up dataframes
-    for df in [covert_pure_train_all, covert_pure_test_all, covert_pure_train_producing, covert_pure_test_producing]:
+    dataframes = [covert_pure_train_all, covert_pure_test_all, covert_pure_train_producing, covert_pure_test_producing]
+    for i, df in enumerate(dataframes):
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
         df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        dataframes[i] = df
+    
+    (
+        covert_pure_train_all, 
+        covert_pure_test_all, 
+        covert_pure_train_producing, 
+        covert_pure_test_producing
+    ) = dataframes
 
     # save dataframes
     covert_pure_train_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_train_all.csv"), index=False)
@@ -166,11 +175,19 @@ def main():
         random_state=42,
         shuffle=True,
     )
-
-    for df in [covert_composite_train_all, covert_composite_test_all, covert_composite_train_producing, covert_composite_test_producing]:
+    dataframes = [covert_composite_train_all, covert_composite_test_all, covert_composite_train_producing, covert_composite_test_producing] 
+    for i, df in enumerate(dataframes):
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
         df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        dataframes[i] = df
+    
+    (
+        covert_composite_train_all, 
+        covert_composite_test_all, 
+        covert_composite_train_producing, 
+        covert_composite_test_producing
+    ) = dataframes
 
     covert_composite_train_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_train_all.csv"), index=False)
     covert_composite_test_all.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_test_all.csv"), index=False)
@@ -194,10 +211,18 @@ def main():
         shuffle=True,
     )
 
-    for df in [overt_pure_train_producing, overt_pure_test_producing]:
+    dataframes = [overt_pure_train_producing, overt_pure_test_producing] 
+    for i, df in enumerate(dataframes):
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
         df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        dataframes[i] = df
+    
+    (
+        overt_pure_train_producing, 
+        overt_pure_test_producing,
+    ) = dataframes
+
 
     overt_pure_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_train_producing.csv"), index=False)
     overt_pure_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_test_producing.csv"), index=False)
@@ -215,11 +240,17 @@ def main():
         random_state=42,
         shuffle=True,
     )
-
-    for df in [overt_composite_train_producing, overt_composite_test_producing]:
+    dataframes = [overt_composite_train_producing, overt_composite_test_producing]
+    for i, df in enumerate(dataframes):
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
         df = df.drop(columns=["Speech_Type", "Vowel_Type"]) # drop unnecessary columns
+        dataframes[i] = df
+    
+    (
+        overt_composite_train_producing, 
+        overt_composite_test_producing,   
+    ) = dataframes
 
     overt_composite_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_train_producing.csv"), index=False)
     overt_composite_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_test_producing.csv"), index=False)
@@ -248,11 +279,20 @@ def main():
         shuffle=True,
     )
 
-    for df in [covert_covert_pure_train, covert_covert_pure_test, covert_covert_all_train, covert_covert_all_test]:
+    dataframes = [covert_covert_pure_train, covert_covert_pure_test, covert_covert_all_train, covert_covert_all_test]
+    for i, df in enumerate(dataframes):
         df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
         df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
+        dataframes[i] = df
+    
+    (
+        covert_covert_pure_train, 
+        covert_covert_pure_test, 
+        covert_covert_all_train, 
+        covert_covert_all_test
+    ) = dataframes
 
 
     covert_covert_pure_train.to_csv(op.join(covert_covert_path,"covert_covert_pure_train.csv"), index=False)
@@ -299,11 +339,20 @@ def main():
         random_state=42,
         shuffle=True,
     )
-    for df in [covert_prod_overt_prod_train_all, covert_prod_overt_prod_test_all, covert_prod_overt_prod_pure_train, covert_prod_overt_prod_pure_test]:
+    dataframes = [covert_prod_overt_prod_train_all, covert_prod_overt_prod_test_all, covert_prod_overt_prod_pure_train, covert_prod_overt_prod_pure_test] 
+    for i, df in enumerate(dataframes):
         df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
         df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
+        dataframes[i] = df
+    
+    (
+        covert_prod_overt_prod_train_all, 
+        covert_prod_overt_prod_test_all, 
+        covert_prod_overt_prod_pure_train, 
+        covert_prod_overt_prod_pure_test,
+    ) = dataframes
 
     covert_prod_overt_prod_train_all.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_train.csv"), index=False)
     covert_prod_overt_prod_test_all.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_test.csv"), index=False)
@@ -346,11 +395,21 @@ def main():
         random_state=42,
         shuffle=True,
     )
-    for df in [covert_read_overt_prod_train_all, covert_read_overt_prod_test_all, covert_read_overt_prod_pure_train, covert_read_overt_prod_pure_test]:
+
+    dataframes = [covert_read_overt_prod_train_all, covert_read_overt_prod_test_all, covert_read_overt_prod_pure_train, covert_read_overt_prod_pure_test]
+    for i, df in enumerate(dataframes):
         df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
         df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
+        dataframes[i] = df
+    
+    (
+        covert_read_overt_prod_train_all, 
+        covert_read_overt_prod_test_all, 
+        covert_read_overt_prod_pure_train, 
+        covert_read_overt_prod_pure_test
+    ) = dataframes
 
     covert_read_overt_prod_train_all.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_train.csv"), index=False)
     covert_read_overt_prod_test_all.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_test.csv"), index=False)
