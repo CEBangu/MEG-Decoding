@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=plot_scalograms
-#SBATCH --output=plot_logs/output_%A_%a.log
-#SBATCH --error=plot_logs/error_%A_%a.log
+#SBATCH --output=logs/plot_logs/output_%A_%a.log
+#SBATCH --error=logs/plot_logs/error_%A_%a.log
 #SBATCH --time=05:00:00
 #SBATCH --partition=common
 #SBATCH --nodes=1

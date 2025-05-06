@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=vit_train
-#SBATCH --output=logs/output_%j.log
-#SBATCH --error=logs/error_%j.log
+#SBATCH --output=logs/model_logs/output_%j.log
+#SBATCH --error=logs/model_logs/error_%j.log
 #SBATCH --partition=gpu #changed it from dedicatedgpu 
 # #SBATCH --qos=fast
 #SBATCH --gres=gpu:1

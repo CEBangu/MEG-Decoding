@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=non_norm_epoching # name
-#SBATCH --output=epoching_logs/non_norm_%A_%a.out
-#SBATCH --error=epoching_logs/non_norm_%A_%a.err
+#SBATCH --output=logs/epoching_logs/non_norm_%A_%a.out
+#SBATCH --error=logs/epoching_logs/non_norm_%A_%a.err
 #SBATCH --partition=common # partition
 #SBATCH --qos=superfast # takes like less than a second for each of them?
 #SBATCH --nodes=1 # number of nodes

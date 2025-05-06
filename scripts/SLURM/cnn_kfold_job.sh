@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=cnn_train
-#SBATCH --output=model_logs/output_%j.log
-#SBATCH --error=model_logs/error_%j.log
+#SBATCH --output=logs/model_logs/output_%j.log
+#SBATCH --error=logs/model_logs/error_%j.log
 #SBATCH --partition=gpu #from dedicatedgpu
 # #SBATCH --qos=fast
 #SBATCH --gres=gpu:1
@@ -48,7 +48,6 @@ echo "MODEL_TYPE: $MODEL_TYPE"
 echo "FREEZE_TYPE: $FREEZE_TYPE"
 echo "NUM_FOLDS: $NUM_FOLDS"
 echo "LABELS: $LABELS"
-echo "DATA_DIR: $DATA_DIR"
 echo "PROJECT_NAME: $PROJECT_NAME"
 echo "NUM_CLASSES: $NUM_CLASSES"
 
@@ -56,7 +55,7 @@ echo "NUM_CLASSES: $NUM_CLASSES"
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-CMD="python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --project_name $PROJECT_NAME --labels $LABELS --data_dir $DATA_DIR"
+CMD="python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --project_name $PROJECT_NAME --labels $LABELS"
 # Check if NUM_CLASSES is defined and add it to the command
 if [[ -n "${NUM_CLASSES}" ]]; then
     CMD+=" --num_classes $NUM_CLASSES"

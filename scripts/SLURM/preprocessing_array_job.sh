@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ica_array # name
-#SBATCH --output=ica_logs/meg_ica_%A_%a.out
-#SBATCH --error=ica_logs/meg_ica_%A_%a.err
+#SBATCH --output=logs/ica_logs/meg_ica_%A_%a.out
+#SBATCH --error=logs/ica_logs/meg_ica_%A_%a.err
 #SBATCH --partition=common # partition
 # #SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
 #SBATCH --nodes=1 # number of nodes
