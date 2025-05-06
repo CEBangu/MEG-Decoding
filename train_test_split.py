@@ -147,10 +147,10 @@ def main():
     ) = dataframes
 
     # save dataframes
-    covert_pure_train_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_train_readprod.csv"), index=False)
-    covert_pure_test_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_test_readprod.csv"), index=False)
-    covert_pure_train_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_train_producing.csv"), index=False)
-    covert_pure_test_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_test_producing.csv"), index=False)
+    covert_pure_train_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_readprod_train.csv"), index=False)
+    covert_pure_test_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_readprod_test.csv"), index=False)
+    covert_pure_train_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_producing_train.csv"), index=False)
+    covert_pure_test_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_pure_producing_test.csv"), index=False)
 
     print("Covert pure vowels train test split done")
 
@@ -189,10 +189,10 @@ def main():
         covert_composite_test_producing
     ) = dataframes
 
-    covert_composite_train_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_train_readprod.csv"), index=False)
-    covert_composite_test_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_test_readprod.csv"), index=False)
-    covert_composite_train_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_train_producing.csv"), index=False)
-    covert_composite_test_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_test_producing.csv"), index=False)
+    covert_composite_train_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_readprod_train.csv"), index=False)
+    covert_composite_test_readprod.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_readprod_test.csv"), index=False)
+    covert_composite_train_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_producing_train.csv"), index=False)
+    covert_composite_test_producing.to_csv(op.join(covert_root_path, "train_test_split", "covert_composite_producing_test.csv"), index=False)
 
     print("Covert composite vowels train test split done")
 
@@ -224,8 +224,8 @@ def main():
     ) = dataframes
 
 
-    overt_pure_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_train_producing.csv"), index=False)
-    overt_pure_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_test_producing.csv"), index=False)
+    overt_pure_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_producing_train.csv"), index=False)
+    overt_pure_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_pure_producing_test.csv"), index=False)
 
     print("Overt pure vowels train test split done")
     #############################################################################################################################################
@@ -252,8 +252,8 @@ def main():
         overt_composite_test_producing,   
     ) = dataframes
 
-    overt_composite_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_train_producing.csv"), index=False)
-    overt_composite_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_test_producing.csv"), index=False)
+    overt_composite_train_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_producing_train.csv"), index=False)
+    overt_composite_test_producing.to_csv(op.join(overt_root_path, "train_test_split", "overt_composite_producing_test.csv"), index=False)
 
     print("Overt composite vowels train test split done")
 
@@ -295,11 +295,11 @@ def main():
     ) = dataframes
 
 
-    covert_covert_pure_train.to_csv(op.join(covert_covert_path,"covert_covert_pure_train_readprod.csv"), index=False)
-    covert_covert_pure_test.to_csv(op.join(covert_covert_path, "covert_covert_pure_test_readprod.csv"), index=False)
+    covert_covert_pure_train.to_csv(op.join(covert_covert_path,"covert_covert_pure_readprod_train.csv"), index=False)
+    covert_covert_pure_test.to_csv(op.join(covert_covert_path, "covert_covert_pure_readprod_test.csv"), index=False)
     print("Covert covert pure train test split done")
-    covert_covert_readprod_train.to_csv(op.join(covert_covert_path, "covert_covert_composite_train_readprod.csv"), index=False)
-    covert_covert_readprod_test.to_csv(op.join(covert_covert_path, "covert_covert_composite_test_readprod.csv"), index=False)
+    covert_covert_readprod_train.to_csv(op.join(covert_covert_path, "covert_covert_composite_readprod_train.csv"), index=False)
+    covert_covert_readprod_test.to_csv(op.join(covert_covert_path, "covert_covert_composite_readprod_test.csv"), index=False)
     print("Covert covert readprod train test split done")
     
 
