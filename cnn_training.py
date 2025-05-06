@@ -20,7 +20,6 @@ def main():
     parser.add_argument('--num_classes', type=int, default=3, help="how many classes")
     parser.add_argument('--project_name', type=str, default=None, help="project name")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
-    parser.add_argument('--data_dir', type=str, required=True, help="path to image directory you want to train on") #update as needed
 
     args = parser.parse_args()
 
@@ -48,9 +47,7 @@ def main():
     wandb.login() # login api key stored in env var
     sweep_id = wandb.sweep(sweep_config, project=args.project_name)
     labels_csv = args.labels
-    image_directory = args.data_dir
     dataset = AlexNetDataHandler(csv_file=labels_csv,
-                               img_directory=image_directory
                                )
 
     model_class = model_dict[args.model_type]

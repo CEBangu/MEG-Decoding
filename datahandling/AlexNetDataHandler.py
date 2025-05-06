@@ -6,9 +6,8 @@ import os
 from PIL import Image
 
 class AlexNetDataHandler(Dataset):
-    def __init__(self, csv_file, img_directory):
+    def __init__(self, csv_file):
         self.data = pd.read_csv(csv_file)
-        self.img_directory = img_directory
         self.transform = transforms.Compose([
             transforms.Resize((224,224)),
             # transforms.RandomCrop(224),
