@@ -354,8 +354,8 @@ def main():
         covert_prod_overt_prod_pure_test,
     ) = dataframes
 
-    covert_prod_overt_prod_train_readprod.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_train.csv"), index=False)
-    covert_prod_overt_prod_test_readprod.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_test.csv"), index=False)
+    covert_prod_overt_prod_train_readprod.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_composite_train.csv"), index=False)
+    covert_prod_overt_prod_test_readprod.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_composite_test.csv"), index=False)
     print("Covert producing vs overt producing train test split done")
     covert_prod_overt_prod_pure_train.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_pure_train.csv"), index=False)
     covert_prod_overt_prod_pure_test.to_csv(op.join(covert_overt_path, "covert_prod_overt_prod_pure_test.csv"), index=False)
@@ -411,8 +411,8 @@ def main():
         covert_read_overt_prod_pure_test
     ) = dataframes
 
-    covert_read_overt_prod_train_readprod.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_train.csv"), index=False)
-    covert_read_overt_prod_test_readprod.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_test.csv"), index=False)
+    covert_read_overt_prod_train_readprod.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_composite_train.csv"), index=False)
+    covert_read_overt_prod_test_readprod.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_composite_test.csv"), index=False)
     print("Covert reading vs overt producing train test split done")
 
     covert_read_overt_prod_pure_train.to_csv(op.join(covert_overt_path, "covert_read_overt_prod_pure_train.csv"), index=False)
