@@ -38,6 +38,7 @@ echo "EMPTY_ROOM_DIR:$ $EMPTY_ROOM_DIR"
 echo "BASELINE_DIR: $BASELINE_DIR"
 echo "TRANS_DIR: $TRANS_DIR"
 echo "RAW_DIR: $RAW_DIR"
+echo "TC_DIR: $TC_DIR"
 
 echo "SPEECH_TYPE: $SPEECH_TYPE"
 echo "AVOID_READING: $AVOID_READING"
@@ -92,6 +93,7 @@ echo "python3 $HOME/MEG-Decoding/beamforming_roi_coefficients.py \
     --baseline_dir $BASELINE_DIR \
     --trans_dir $TRANS_DIR \
     --raw_dir $RAW_DIR \
+    --tc_save_dir $TC_DIR \
     $MNE_ARG"
 
 # run the python script
@@ -106,4 +108,5 @@ python3 $HOME/MEG-Decoding/beamforming_roi_coefficients.py \
     --baseline_dir $BASELINE_DIR \
     --trans_dir $TRANS_DIR \
     --raw_dir $RAW_DIR \
+    --tc_save_dir $TC_DIR \
     $MNE_ARG
