@@ -293,7 +293,7 @@ def main():
                 )
 
                 # mean substraction normalization for the time-course
-                normalized_time_course = [condition_time_course - label_time_course_baseline[0].mean() for condition_time_course in label_time_courses_condition]
+                normalized_time_courses = [condition_time_course - label_time_course_baseline[0].mean() for condition_time_course in label_time_courses_condition]
                 
                 # save the time course
                 np.save(
