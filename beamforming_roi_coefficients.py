@@ -16,6 +16,7 @@ def main():
     parser.add_argument('--speech_type', type=str, required=True, help="Covert or Overt?")
     parser.add_argument('--data_dir', type=str, help="Directory where the data is stored")
     parser.add_argument('--save_dir', type=str, required=True, help="Directory to save the coefficients")
+    parser.add_argument('--tc_save_dir', type=str, required=True, help="Directory to save the normalized time courses in")
     parser.add_argument('--empty_room_dir', type=str, required=True, help="Directory where the empty room recordings are stored")
     parser.add_argument('--baseline_dir', type=str, required=True, help='directory where baselines are stored')
     parser.add_argument('--trans_dir', type=str, help="directory where the MRI transformations are stored")
@@ -120,6 +121,7 @@ def main():
     mne_dir = args.mne_dir
     trans_dir = args.trans_dir
     raw_dir = args.raw_dir
+    tc_save_dir = args.tc_save_dir
 
     save_dir = args.save_dir
 
@@ -196,7 +198,7 @@ def main():
         dropped_epochs = []
         
 
-        
+        # get all of the data to compute the data covariance matrix
         for file in os.listdir(covert_dir):
             if subject in file:
                 file_path = os.path.join(covert_dir, file)
@@ -205,6 +207,7 @@ def main():
                         dropped_epochs.append(("Covert", file, len(epoch.events)))
                 else:
                         epochs_array.append(epoch)
+
         for file in os.listdir(overt_dir):
             if subject in file:
                 file_path = os.path.join(covert_dir, file)
@@ -289,6 +292,15 @@ def main():
                     return_generator=False,
                 )
 
+                # mean substraction normalization for the time-course
+                normalized_time_course = [condition_time_course - label_time_course_baseline[0].mean() for condition_time_course in label_time_courses_condition]
+                
+                # save the time course
+                np.save(
+                    os.path.join(tc_save_dir, f"{subject}_{syllable}_{label}_normalized_time_courses.npy"),
+                    normalized_time_course
+                )
+                
                 baseline_tf = process_channel(
                     signal=label_time_course_baseline,
                     cwt_wavelet=cwt_wavelet,

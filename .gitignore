@@ -46,3 +46,4 @@ test.ipynb
 *.err
 *.out
 /.vscode
+config_generator_v2.ipynb
