@@ -58,7 +58,7 @@ def main():
     raw_path = op.join(root, "BCOM/DATA_RAW")
     preprocessed_path = op.join(root, "ciprian_project/data_analyzed/preprocessed")
     # non_normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/non_normalized/data")
-    normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/normalized/data")
+    normalized_epoch_path = op.join(root, "ciprian_project/data_analyzed/zscore_norm/data")
     baseline_path = op.join(root, "ciprian_project/data_analyzed/baselines")
 
     # triggers
@@ -97,11 +97,12 @@ def main():
     # we don't want the bad localization channel, which has not been interpolated, to impact the rescaling
     include_idxs = mne.pick_channels(subject_raw.ch_names, include=[], exclude=[bad_localization_channel])
     
-    # now apply the rescaling to these channels
+    # now apply the rescaling to these channels, using the zscore so that we can properly compare sensors in the condition
     rescaled = mne.baseline.rescale(
         subject_raw._data[include_idxs], 
         times=subject_raw.times, 
         baseline=baseline_times,
+        mode='zcore',
     )
     
     # then replace the data at the indexes with the rescaled data, leaving the metadata in place. 
