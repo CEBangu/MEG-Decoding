@@ -3,10 +3,10 @@
 #SBATCH --output=logs/epoching_logs/non_norm_%A_%a.out
 #SBATCH --error=logs/epoching_logs/non_norm_%A_%a.err
 #SBATCH --partition=common # partition
-#SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
+# #SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
 #SBATCH --nodes=1 # number of nodes
 #SBATCH --ntasks=1 # number of tasks
-#SBATCH --cpus-per-task=3 # auotreject has job options
+#SBATCH --cpus-per-task=10 # auotreject has job options
 #SBATCH --mem=3000 # memory in MB
 #SBATCH --array=0-62 # one job on 
 #SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails

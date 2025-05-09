@@ -38,7 +38,7 @@ bad_localization_channel = "MEG 173"
 # epoch settings
 epoch_tmin=-0.4 # start
 epoch_tmax=0.8 # end
-reject_dict = dict(mag=5e-12) # autoreject
+#reject_dict = dict(mag=5e-12) # well, since we are zscoring the data before epoching, we should just let autoreject take care of it 
 
 def main():
 
@@ -81,9 +81,9 @@ def main():
     # the coordinates on this channel are super weird, just exclude it from the analysis
     subject_raw = subject_raw.interpolate_bads(exclude=[bad_localization_channel])
 
-    events = np.load(events_path)
+    subject_events = np.load(events_path)
 
-    baseline, baseline_times = baseline_cropper(subject_raw, events)
+    baseline, baseline_times = baseline_cropper(subject_raw, subject_events)
 
     if args.save_baseline:
         
@@ -92,21 +92,23 @@ def main():
 
         baseline.save(op.join(baseline_dir, sub + '_' + block + '_baseline_raw.fif'), overwrite=True)
 
-    del baseline # free memory, we have what we need
+    # del baseline # free memory, we have what we need
 
     # we don't want the bad localization channel, which has not been interpolated, to impact the rescaling
-    include_idxs = mne.pick_channels(subject_raw.ch_names, include=[], exclude=[bad_localization_channel])
-    
-    # now apply the rescaling to these channels, using the zscore so that we can properly compare sensors in the condition
-    rescaled = mne.baseline.rescale(
-        subject_raw._data[include_idxs], 
-        times=subject_raw.times, 
-        baseline=baseline_times,
-        mode='zcore',
-    )
-    
-    # then replace the data at the indexes with the rescaled data, leaving the metadata in place. 
-    subject_raw._data[include_idxs] = rescaled 
+    # include_idxs = mne.pick_channels(subject_raw.ch_names, include=[], exclude=[bad_localization_channel])
+
+    # manual zscoring 
+    baseline_mean = baseline._data.mean(axis=1, keepdims=True)
+    baseline_std = baseline._data.std(axis=1, ddof=1, keepdims=True)
+    epsilon = 1e-10 # avoid 0 divison 
+    baseline_std[baseline_std < epsilon] = epsilon
+
+    subject_raw._data = (subject_raw._data - baseline_mean) / baseline_std
+
+    # # then replace the data at the indexes with the rescaled data, leaving the metadata in place. 
+    # subject_raw._data[include_idxs] = rescaled 
+
+    subject_raw.drop_channels([bad_localization_channel])
 
     for trigger in produce_triggers:
     
@@ -124,10 +126,10 @@ def main():
         
         produce_trigger = int(trigger)
         read_trigger = int(trigger) - 100
-        all_read_events = [event for event in events if int(event[2]) == int(read_trigger)] 
-        all_produce_events = [event for event in events if int(event[2]) == int(produce_trigger)] 
+        all_read_events = [event for event in subject_events if int(event[2]) == int(read_trigger)] 
+        all_produce_events = [event for event in subject_events if int(event[2]) == int(produce_trigger)] 
 
-        Epo = Epoching(mat_path, events)
+        Epo = Epoching(mat_path, subject_events)
 
         bad_idx = Epo.get_bad_syll(raw_path, sub, read_trigger, read_triggers, syllables, int(block))
 
@@ -138,78 +140,121 @@ def main():
             cleaned_read_events.pop(idx)
             cleaned_produce_events.pop(idx)
             
-        events_list = []
+        all_events = {
+            "OVERT":[
+                np.array([event for event in all_produce_events if Epo.is_overt(event)])
+            ],
+            "COVERT": [
+                np.array([event for event in all_read_events]),
+                np.array([event for event in all_produce_events if not Epo.is_overt(event)]),
+            ],
+        }
 
-        all_read_events_covert = np.array([event for event in all_read_events if not Epo.is_overt(event)]) 
-        events_list.append(all_read_events_covert)
-        all_read_events_overt = np.array([event for event in all_read_events if Epo.is_overt(event)]) 
-        events_list.append(all_read_events_overt)
-
-        all_produce_events_covert = np.array([event for event in all_produce_events if not Epo.is_overt(event)]) 
-        events_list.append(all_produce_events_covert)
-        all_produce_events_overt = np.array([event for event in all_produce_events if Epo.is_overt(event)])
-        events_list.append(all_produce_events_overt)
-
-        cleaned_read_events_covert = np.array([event for event in cleaned_read_events if not Epo.is_overt(event)]) 
-        events_list.append(cleaned_read_events_covert)
-        cleaned_read_events_overt = np.array([event for event in cleaned_read_events if Epo.is_overt(event)])
-        events_list.append(cleaned_read_events_overt)
-
-        cleaned_produce_events_covert = [event for event in cleaned_produce_events if not Epo.is_overt(event)]
-        events_list.append(cleaned_produce_events_covert)
-        cleaned_produce_events_overt = [event for event in cleaned_produce_events if Epo.is_overt(event)]
-        events_list.append(cleaned_produce_events_overt)
+        clean_events = {
+            "OVERT": [
+                np.array([event for event in cleaned_produce_events if Epo.is_overt(event)])
+            ],
+            "COVERT": [
+                np.array([event for event in cleaned_read_events]),
+                np.array([event for event in cleaned_produce_events if not Epo.is_overt(event)]),
+            ],
+        }
 
         picks = mne.pick_types(subject_raw.info, meg=True, eeg=False, stim=False, eog=False, ecg=False, misc=False) 
         
-        for idx in range(len(events_list)): 
-            evs = events_list[idx]
-            if idx < 4:
-                cleaning = 'WITH_BADS'
-            elif idx > 3:
-                cleaning = 'WITHOUT_BADS'
-            if idx % 2 == 0:
-                condition = 'COVERT'
-            elif idx % 2 == 1:
-                condition = 'OVERT'
+        for condition in clean_events:
 
-            if len(evs) > 0:
-                # make the epochs
-                epochs_main = mne.Epochs(
-                    subject_raw, 
-                    events=evs, 
-                    reject=reject_dict, 
-                    picks=picks, 
-                    baseline=None,
-                    tmin=epoch_tmin, 
-                    tmax=epoch_tmax, 
-                    preload=True
-                ) 
+            for events in clean_events[condition]:
 
-                # epochs_main.plot_drop_log()
-
-                if len(epochs_main) != 0:
-                    ar = AutoReject(
-                        verbose=True, 
+                if len(events) > 0:
+                    # make the epochs
+                    epochs_main = mne.Epochs(
+                        subject_raw, 
+                        events=events, 
+                        reject=None, 
                         picks=picks, 
-                        n_jobs=3
+                        baseline=None,
+                        tmin=epoch_tmin, 
+                        tmax=epoch_tmax, 
+                        preload=True,
                     ) 
-                    try:
-                        epochs_clean = ar.fit_transform(epochs_main) 
-                    except:
-                        epochs_clean = epochs_main 
 
-                    trigger_index = produce_triggers.index(produce_trigger)
-                    if len(epochs_clean) != 0:
-                        syll_label = epochs_main.events[0][2]
-                        
-                        cleaned_epoch_path = os.path.join(normalized_epoch_path, cleaning, condition)
-                        os.makedirs(cleaned_epoch_path, exist_ok=True)
+                    # epochs_main.plot_drop_log()
 
-                        epochs_clean.save(
-                            os.path.join(cleaned_epoch_path, sub + '_' + block + '_' + syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'),
-                            overwrite=True,
-                        )
+                    if len(epochs_main) != 0:
+                        ar = AutoReject(
+                            verbose=True, 
+                            picks=picks, 
+                            n_jobs=10
+                        ) 
+
+                        try:
+                            epochs_clean = ar.fit_transform(epochs_main) 
+                        except Exception as e:
+                            print("No auto-reject applied")
+                            print(f"[AutoReject error] Failed to apply AutoReject: {type(e).__name__} - {e}")
+                            epochs_clean = epochs_main 
+
+                        trigger_index = produce_triggers.index(produce_trigger)
+
+                        if len(epochs_clean) != 0:
+                            syll_label = epochs_main.events[0][2]
+                            
+                            cleaned_epoch_path = os.path.join(normalized_epoch_path, "WITHOUT_BADS", condition)
+                            os.makedirs(cleaned_epoch_path, exist_ok=True)
+
+                            epochs_clean.save(
+                                os.path.join(cleaned_epoch_path, sub + '_' + block + '_' + syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'),
+                                overwrite=True,
+                            )
+
+        print("Clean events done")
+
+        for condition in all_events:
+
+            for events in all_events[condition]:
+
+                if len(events) > 0:
+                    # make the epochs
+                    epochs_main = mne.Epochs(
+                        subject_raw, 
+                        events=events, 
+                        reject=None, 
+                        picks=picks, 
+                        baseline=None,
+                        tmin=epoch_tmin, 
+                        tmax=epoch_tmax, 
+                        preload=True,
+                    ) 
+
+                    # epochs_main.plot_drop_log()
+
+                    if len(epochs_main) != 0:
+                        ar = AutoReject(
+                            verbose=True, 
+                            picks=picks, 
+                            n_jobs=10
+                        ) 
+
+                        try:
+                            epochs_clean = ar.fit_transform(epochs_main) 
+                        except Exception as e:
+                            print("No auto-reject applied")
+                            print(f"[AutoReject error] Failed to apply AutoReject: {type(e).__name__} - {e}")
+                            epochs_clean = epochs_main 
+
+                        trigger_index = produce_triggers.index(produce_trigger)
+
+                        if len(epochs_clean) != 0:
+                            syll_label = epochs_main.events[0][2]
+                            
+                            cleaned_epoch_path = os.path.join(normalized_epoch_path, "WITH_BADS", condition)
+                            os.makedirs(cleaned_epoch_path, exist_ok=True)
+
+                            epochs_clean.save(
+                                os.path.join(cleaned_epoch_path, sub + '_' + block + '_' + syllables[trigger_index]+'_'+str(syll_label)+'-epo.fif'),
+                                overwrite=True,
+                            ) 
 
         end = time.time()
         print(f"Iteration duration: {end - start:.2f} seconds")

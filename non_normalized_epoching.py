@@ -80,6 +80,9 @@ def main():
     # the coordinates on this channel are super weird, just exclude it from the analysis
     subject_raw = subject_raw.interpolate_bads(exclude=[bad_localization_channel])
 
+    # drop otherwise autoreject doesn't work (silent failure before, caught now with exceptions)
+    subject_raw.drop_channels([bad_localization_channel]) 
+    
     # get the resampled events
     subject_events = np.load(events_path)
 
@@ -147,7 +150,6 @@ def main():
             ],
         }
 
-
         picks = mne.pick_types(subject_raw.info, meg=True, eeg=False, stim=False, eog=False, ecg=False, misc=False) 
 
         # ok so let's try 2 loops then
@@ -178,7 +180,9 @@ def main():
 
                         try:
                             epochs_clean = ar.fit_transform(epochs_main)
-                        except:
+                        except Exception as e:
+                            print("No auto-reject applied")
+                            print(f"[AutoReject error] Failed to apply AutoReject: {type(e).__name__} - {e}")
                             epochs_clean = epochs_main 
 
                         trigger_index = produce_triggers.index(produce_trigger)
@@ -215,13 +219,16 @@ def main():
                         ar = AutoReject(
                             verbose=True, 
                             picks=picks, 
-                            n_jobs=3
+                            n_jobs=10
                         )
 
                         try:
                             epochs_clean = ar.fit_transform(epochs_main)
-                        except:
-                            epochs_clean = epochs_main 
+
+                        except Exception as e:
+                            print("No auto-reject applied")
+                            print(f"[AutoReject error] Failed to apply AutoReject: {type(e).__name__} - {e}")
+                            epochs_clean = epochs_main  
 
                         trigger_index = produce_triggers.index(produce_trigger)
                         if len(epochs_clean) != 0:

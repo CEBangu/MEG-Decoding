@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=non_norm_epoching # name
-#SBATCH --output=logs/epoching_logs/non_norm_%A_%a.out
-#SBATCH --error=logs/epoching_logs/non_norm_%A_%a.err
+#SBATCH --output=logs/epoching_logs/norm_%A_%a.out
+#SBATCH --error=logs/epoching_logs/norm_%A_%a.err
 #SBATCH --partition=common # partition
-#SBATCH --qos=fast # takes like less than a second for each of them?
+# #SBATCH --qos=normal # unsure how long it will take. 
 #SBATCH --nodes=1 # number of nodes
 #SBATCH --ntasks=1 # number of tasks
-#SBATCH --cpus-per-task=3 # auotreject has job options
+#SBATCH --cpus-per-task=10 # auotreject has job options
 #SBATCH --mem=8000 # memory in MB
 #SBATCH --array=0-62 # one job on 
 #SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails
