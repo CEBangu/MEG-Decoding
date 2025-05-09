@@ -47,6 +47,7 @@ class BcomMEG():
             for epoch in self.data[subject]:
                 self.data[subject][epoch] = self.data[subject][epoch].get_data()
 
+
     #TODO: this currently does epoch by epoch transformation. I should add an option to do it syllable by syllable
     def get_spectrogram(self, frequencies:NDArray, cycle_divisor:int, baseline:tuple, mode='logratio', data_only=False):
         '''This method applies the spectrogram transformation to the data from

@@ -48,6 +48,7 @@ def main():
     # get fsaverage
     subjects_dir = args.mne_dir if args.mne_dir is not None else os.path.dirname(mne.datasets.fetch_fsaverage(verbose=True))
 
+    # mne config line
     set_config("SUBJECTS_DIR", subjects_dir, set_env=True)
 
     #get labels
@@ -125,6 +126,7 @@ def main():
 
     save_dir = args.save_dir
 
+    # same for all of them - should not be used for interpolation (very strange co-ordinates)
     bad_localization_channel = "MEG 173"
     
     data = BcomMEG(dir=data_dir, # we need all of the data so that we can compute the data_covariance matrix
@@ -250,8 +252,10 @@ def main():
         # now on the actual data # 
         ###########################
 
+        # get the reconstruction of the baseline
         recon_baseline = mne.beamformer.apply_lcmv_raw(baseline, filters)
 
+        # get the morph relative to fsaverage
         morph = mne.compute_source_morph(
             src=morphed_source,
             subject_from=f"{scaled}_{subject}",
@@ -259,23 +263,31 @@ def main():
             subjects_dir=subjects_dir,
         )
 
+        # reconstruct the activity based on the morph
         morphed_baseline = morph.apply(recon_baseline)
 
-
+        # now do it for the real data
         for syllable in data.data[subject]:
+            # time of interest crop
             data.data[subject][syllable].crop(tmin=-0.2, tmax=0.6)
-
-            recon_task = mne.beamformer.apply_lcmv_epochs(data.data[subject][syllable], filters)
-
-            morphed_time_courses = [morph.apply(stc) for stc in recon_task]
-
-            n_time_points = data.data[subject][syllable][0].copy().get_data().shape[-1]
-        
-            roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, n_time_points])
             
+            # task reconstruction
+            recon_task = mne.beamformer.apply_lcmv_epochs(data.data[subject][syllable], filters)
+            
+            # morph the time_course
+            morphed_time_courses = [morph.apply(stc) for stc in recon_task]
+            
+            # need to get number of time-points to set up the array
+            n_time_points = data.data[subject][syllable][0].copy().get_data().shape[-1]
+            
+            # set up array to store the data
+            roi_array = np.zeros([len(label_dictionary), len(data.data[subject][syllable]), log_samples, n_time_points]) #labels x sylalbles x scales x timepoints
+            
+            # iterate through the lables to populate array - only 5 labels so parallelizing here seems like overkill 
             for i, label in enumerate(label_dictionary):
                 print(f"getting timecourse for {label}")
 
+                # get time-course for the data
                 label_time_courses_condition = mne.extract_label_time_course(
                     morphed_time_courses,
                     label_dictionary[label],
@@ -284,6 +296,7 @@ def main():
                     return_generator=False,
                 )
 
+                # get the same time-course for the baseline period 
                 label_time_course_baseline = mne.extract_label_time_course(
                     morphed_baseline,
                     label_dictionary[label],
@@ -298,9 +311,10 @@ def main():
                 # save the time course
                 np.save(
                     os.path.join(tc_save_dir, f"{subject}_{syllable}_{label}_normalized_time_courses.npy"),
-                    normalized_time_course
-                )
+                    normalized_time_courses
+                ) 
                 
+                # baseline time-frequency representation
                 baseline_tf = process_channel(
                     signal=label_time_course_baseline,
                     cwt_wavelet=cwt_wavelet,
@@ -310,14 +324,16 @@ def main():
                     level=level,
                 )
 
+                # cursed reshaping 
                 reshaped_baseline = np.transpose(baseline_tf, (0, 2, 1))
                 reshaped_baseline = reshaped_baseline.squeeze()
                 reshaped_baseline = reshaped_baseline[:, :label_time_course_baseline.shape[1]]
 
+                # mean and std for z-scoring 
                 baseline_row_mean = reshaped_baseline.mean(axis=1, keepdims=True)
                 baseline_row_std = reshaped_baseline.std(axis=1, keepdims=True)
 
-                
+                # get the tf representation for the data
                 for j, tc in enumerate(label_time_courses_condition):
                     result_condition = process_channel(
                         signal=tc,
@@ -327,15 +343,17 @@ def main():
                         dwt_wavelet_name=dwt_wavelet_name,
                         level=level,
                     )
-
+                    # cursed reshaping 
                     reshaped_result = np.transpose(result_condition, (0, 2, 1))
                     reshaped_result = reshaped_result.squeeze()
                     reshaped_result = reshaped_result[:, :tc.shape[1]] 
 
+                    # normalize data
                     normalized_result = (reshaped_result - baseline_row_mean) / baseline_row_std
 
+                    # store it
                     roi_array[i, j] = normalized_result
-
+                # save save save 
                 save_coefficient_results(
                     subject=subject,
                     syllable=syllable,
