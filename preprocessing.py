@@ -101,8 +101,13 @@ def main():
 
 
     subjects = [name for name in os.listdir(old_pp_path) if "BCOM" in name] # only the subjects that were deemed good to look at
-    blocks = [2, 3, 4] # block names
+    if args.subject == "BCOM_08":
+        blocks = [3, 4, 5]
+    else:
+        blocks = [2, 3, 4] # block names
+    
     print(subjects)
+    print(blocks)
 
     pdf_suffix = "c,rfDC"
     config_suffix = "config"
