@@ -7,8 +7,8 @@
 #SBATCH --nodes=1 # number of nodes
 #SBATCH --ntasks=1 # number of tasks
 #SBATCH --cpus-per-task=10 # auotreject has job options
-#SBATCH --mem=8000 # memory in MB
-#SBATCH --array=0-62 # one job on 
+#SBATCH --mem=3000 # memory in MB
+#SBATCH --array=0-62 # for all of them 
 #SBATCH --mail-type=BEGIN,END,FAIL # send email on job end and if it fails
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr # email
 

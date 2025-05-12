@@ -312,7 +312,7 @@ def main():
                 np.save(
                     os.path.join(tc_save_dir, f"{subject}_{syllable}_{label}_normalized_time_courses.npy"),
                     normalized_time_courses
-                ) 
+                )
                 
                 # baseline time-frequency representation
                 baseline_tf = process_channel(

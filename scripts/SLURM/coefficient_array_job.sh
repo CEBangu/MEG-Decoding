@@ -39,7 +39,7 @@ echo "SPEECH_TYPE: $SPEECH_TYPE"
 echo "AVOID_READING: $AVOID_READING"
 echo "AVOID_PRODUCING: $AVOID_PRODUCING"
 echo "Job Array Index: $SLURM_ARRAY_TASK_ID"
-
+echo "BASELINE_DIR: $BASELINE_DIR"
 
 INDEX=$((SLURM_ARRAY_TASK_ID - 1))
 
@@ -70,7 +70,7 @@ echo "Python path: $PYTHONPATH"
 
 # Print Python command for debugging
 echo "Executing Python command:"
-echo "python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir $DATA_DIR --save_dir $SCRATCH_DIR"
+echo "python3 $HOME/MEG-Decoding/sensor_coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir $DATA_DIR --save_dir $SCRATCH_DIR --baseline_dir $BASELINE_DIR"
 
 # run the python script
-python3 $HOME/MEG-Decoding/coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR"
+python3 $HOME/MEG-Decoding/sensor_coefficient_computation.py --subject_list $SUBJECTS --speech_type $SPEECH_TYPE $AVOID_READING $AVOID_PRODUCING --data_dir "$DATA_DIR" --save_dir "$SCRATCH_DIR" --baseline_dir "$BASELINE_DIR"

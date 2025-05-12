@@ -95,7 +95,7 @@ def main():
             data.data[subject][syllable].crop(tmin=-0.2, tmax=0.6)
 
             # then get the np arrays
-            data.data[subject][syllable].get_data()
+            data.data[subject][syllable] = data.data[subject][syllable].get_data() #replace the epoch.fif with an np array
 
             # set up coefficient array
             all_coefficients = np.zeros(

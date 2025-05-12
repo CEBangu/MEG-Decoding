@@ -92,6 +92,8 @@ def main():
 
         baseline.save(op.join(baseline_dir, sub + '_' + block + '_baseline_raw.fif'), overwrite=True)
 
+        print("Baseline saved")
+
     # del baseline # free memory, we have what we need
 
     # we don't want the bad localization channel, which has not been interpolated, to impact the rescaling
