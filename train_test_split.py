@@ -308,7 +308,7 @@ def main():
     # covert vs overt - to be split into reading vs producing, and producing vs producing - to be split into pure vowels and consonants + vowels: 4 cases
 
     # covert producing vs overt producing
-
+    
     covert_producing_pure = covert_dataframe[(covert_dataframe["Vowel_Type"] == "pure") & (covert_dataframe["Speech_Type"] == 1)]
     covert_producing_readprod = covert_dataframe[covert_dataframe["Speech_Type"] == 1]
 
@@ -319,10 +319,13 @@ def main():
     covert_producing_pure = covert_producing_pure.reset_index(drop=True)
 
     covert_prod_overt_prod_pure = pd.concat([covert_producing_pure, overt_dataframe], ignore_index=True)
+
+    covert_prod_overt_prod_pure['covert_overt']= covert_prod_overt_prod_pure['FileName'].apply(lambda x: 1 if "covert" in x else 0)
+
     covert_prod_overt_prod_pure_train, covert_prod_overt_prod_pure_test = train_test_split(
         covert_prod_overt_prod_pure,
         test_size=0.1,
-        stratify=covert_prod_overt_prod_pure["Speech_Type"],
+        stratify=covert_prod_overt_prod_pure["covert_overt"],
         random_state=42,
         shuffle=True,
     )
@@ -332,17 +335,19 @@ def main():
 
     covert_prod_overt_prod_readprod = pd.concat([covert_producing_readprod, overt_dataframe], ignore_index=True)
 
+    covert_prod_overt_prod_readprod['covert_overt'] = covert_prod_overt_prod_readprod['FileName'].apply(lambda x: 1 if "covert" in x else 0)
+
     covert_prod_overt_prod_train_readprod, covert_prod_overt_prod_test_readprod = train_test_split(
         covert_prod_overt_prod_readprod,
         test_size=0.1, 
-        stratify=covert_prod_overt_prod_readprod["Speech_Type"],
+        stratify=covert_prod_overt_prod_readprod["covert_overt"],
         random_state=42,
         shuffle=True,
     )
     dataframes = [covert_prod_overt_prod_train_readprod, covert_prod_overt_prod_test_readprod, covert_prod_overt_prod_pure_train, covert_prod_overt_prod_pure_test] 
     for i, df in enumerate(dataframes):
-        df = df.drop(columns=["Label", "Vowel_Type"]) # drop unnecessary columns
-        df = df.rename(columns={"Speech_Type": "Label"}) # we wnat the speech type to be the label in this case
+        df = df.drop(columns=["Label", "Vowel_Type", "Speech_Type"]) # drop unnecessary columns
+        df = df.rename(columns={"covert_overt": "Label"}) # we wnat the speech type to be the label in this case
         df["Label"] = df["Label"].astype(int) # type enforcement
         df["FileName"] = df["FileName"].astype(str) # type enforcement
         dataframes[i] = df

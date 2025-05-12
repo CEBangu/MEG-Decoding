@@ -43,12 +43,13 @@ def process_file(filename, args, plotter):
     except Exception as e:
         print(f"Error loading {filename}: {e}")
         return
-    if data.ndim == 3:
+    if data.shape[1] == 247: # kind of hacky, but it should work - need a way of gating the two and I don't want to add another argument
+    # but every sensor job will have 247 sensors in the np array
         Parallel(n_jobs=args.epoch_workers)(
             delayed(process_epoch_sensor)(epoch_index, epoch, filename, args, plotter)
             for epoch_index, epoch in enumerate(data)
         )
-    elif data.ndim == 4:
+    else: #if it doesn't, then it's an ROI job 
         Parallel(n_jobs=args.epoch_workers)(
             delayed(process_epoch_roi)(i, data, filename, args, plotter)
             for i in range(data.shape[1])

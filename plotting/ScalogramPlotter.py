@@ -77,12 +77,12 @@ class ScalogramPlotter:
 
     def plot_roi(self, coefficients: np.ndarray):
         """plot n scalograms when it is in roi space.
-        NB! this takes in split up epochs already i.e., tensor of ROI x 100 x 241
+        NB! this takes in split up epochs already i.e., tensor of ROI x 100 x 401
         """
         
         # Check if the input tensor is 3-dimensional
         if coefficients.ndim != 3:
-            raise ValueError("Input tensor must be 3-dimensional (ROI x 100 x 241).")
+            raise ValueError("Input tensor must be 3-dimensional (ROI x 100 x 401).")
             
         fig, ax = plt.subplots(
             self.dimensions[0], 

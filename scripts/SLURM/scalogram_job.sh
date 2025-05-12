@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1       
 #SBATCH --cpus-per-task=8  # Or adjust as needed
-#SBATCH --mem=10000
+#SBATCH --mem=16000
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=ciprian.bangu@pasteur.fr
 #SBATCH --array=0-20       # 21 tasks
