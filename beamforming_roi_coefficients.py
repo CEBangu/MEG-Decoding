@@ -49,7 +49,7 @@ def main():
     subjects_dir = args.mne_dir if args.mne_dir is not None else os.path.dirname(mne.datasets.fetch_fsaverage(verbose=True))
 
     # mne config line
-    set_config("SUBJECTS_DIR", subjects_dir, set_env=True)
+    os.environ["SUBJECTS_DIR"] = subjects_dir
 
     #get labels
     labels_hcp = mne.read_labels_from_annot(

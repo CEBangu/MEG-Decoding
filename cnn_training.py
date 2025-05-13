@@ -34,10 +34,10 @@ def main():
     "method": "bayes",
     "metric": {"name": "val_loss", "goal": "minimize"}, # changed from validation loss to f1
     "parameters": {
-        "learning_rate": {"values": [1e-4,1e-3, 1e-2]}, #0.0001, 3e-4]},
-        "batch_size": {"values": [128, 64]}, #128]},
+        "learning_rate": {"values": [1e-4,1e-3, 1e-5, 3e-3, 3e-4, 3e-5]}, #0.0001, 3e-4]},
+        "batch_size": {"values": [128, 64, 256,]}, #128]},
         "optimizer": {"values": ["adam"]}, #, "sgd" "rmsprop", "adamw_torch"]},
-        "weight_decay": {"values": [1e-4, 2e-3, 1e-2]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
+        "weight_decay": {"values": [1e-4, 1e-3, 1e-5, 3e-3, 3e-4,]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",

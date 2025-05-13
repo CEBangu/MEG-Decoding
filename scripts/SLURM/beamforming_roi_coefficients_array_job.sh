@@ -2,7 +2,7 @@
 #SBATCH --job-name=coefficient_array_job # name
 #SBATCH --output=logs/coef_logs/output_%A_%a.log # Job Array ID, Task ID
 #SBATCH --error=logs/coef_logs/error_%A_%a.log # Job Array ID, Task ID
-#SBATCH --time=02:00:00 # timelimit - shouldn't take more than 20 mins if the nodes are available
+# #SBATCH --time=02:00:00 # timelimit - shouldn't take more than 20 mins if the nodes are available
 #SBATCH --partition=common # partition
 #SBATCH --qos=fast #superfast might be cutting it close, but we'll see how fast it is on the good machines
 #SBATCH --nodes=1 # number of nodes
