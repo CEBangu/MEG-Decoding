@@ -55,7 +55,8 @@ def main():
     freeze_type = args.freeze_type
 
     # change later, just want to test it out for now. 
-    k = args.num_folds
+    k = args.num_folds # if we find one that seems to work then maybe switch to 10, otherwise it just takes too long
+    k = 3
     num_classes = args.num_classes
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(

@@ -200,7 +200,8 @@ def main():
         dropped_epochs = []
         
 
-        # get all of the data to compute the data covariance matrix
+        # get all of the data to compute the data covariance matrix - lose some because it is just incompatible with the raw for some reason
+        # but its only like a couple of epochs so it should be fine
         for file in os.listdir(covert_dir):
             if subject in file:
                 file_path = os.path.join(covert_dir, file)

@@ -227,7 +227,7 @@ def main():
             eog_ch=("EOGv", "EOGh"),    
             preload=True,
         )
-        
+        # local outlier factor cleaning
         noisy_channels_empty_room = mne.preprocessing.find_bad_channels_lof(
             empty_room_raw
             .copy()

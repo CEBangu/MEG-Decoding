@@ -237,18 +237,19 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
 
         # let's see if some transformations help?
         train_transforms = transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15),
-            transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
+            # transforms.RandomHorizontalFlip(),
+            # transforms.RandomRotation(15),
+            transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
         ])
-        # def train_set_collate_fn(batch):
-        #     """
-        #     This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
-        #     these in the dataloader)
-        #     """
-        #     # images, labels = zip(*batch)  # Unpack batch
-        #     # images = [train_transforms(img) for img in images]  # Apply train transforms
-        #     # return torch.stack(images), torch.tensor(labels)
+
+        def train_set_collate_fn(batch):
+            """
+            This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
+            these in the dataloader)
+            """
+            images, labels = zip(*batch)  # Unpack batch
+            images = [train_transforms(img) for img in images]  # Apply train transforms
+            return torch.stack(images), torch.tensor(labels)
 
         train_loader = DataLoader(
             train_subset, 
@@ -256,7 +257,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
             shuffle=True, 
             num_workers=8, 
             pin_memory=True,
-            # collate_fn=train_set_collate_fn #transforms only for training set
+            collate_fn=train_set_collate_fn, #transforms only for training set
             )
         
         val_loader = DataLoader(

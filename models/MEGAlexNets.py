@@ -79,7 +79,7 @@ class AlexNetFinalOnly(nn.Module, LayerFreezeMixin):
     def __init__(self, num_classes=3):
         super().__init__()
         pretrained =  models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
-
+        # pretrained =  models.alexnet(weights=None)
         pretrained.classifier[-1] = nn.Linear(in_features=4096, out_features=num_classes)
         # Keep all layers as they are, including AdaptiveAvgPool2d
         self.features = pretrained.features
@@ -103,7 +103,7 @@ class AlexNetSuddenDescend(nn.Module, LayerFreezeMixin):
     def __init__(self, num_classes=3):
         super().__init__()
         self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
-
+        # self.model =  models.alexnet(weights=None)
         # Keep all layers as they are, including AdaptiveAvgPool2d
         self.features = self.model.features
         self.avgpool = self.model.avgpool  # This is AdaptiveAvgPool2d
