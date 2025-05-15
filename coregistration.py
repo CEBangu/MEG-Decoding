@@ -41,7 +41,8 @@ def main():
 
 
     for file in meg_files:
-        parsed_filename = file.split("/")[8] + "_" + file.split("/")[9]
+        parsed_filename = file.split("/")[8] + "_" + file.split("/")[9] # NB! this only works with the filenames from a local 
+        # zeus mount - should be changed if we want to run it from the server. 
 
         print(f"processing subject {parsed_filename}")
 
