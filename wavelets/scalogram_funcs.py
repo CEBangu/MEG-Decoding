@@ -23,9 +23,27 @@ def process_channel(signal, cwt_wavelet, scales, sampling_period, dwt_wavelet_na
     coefficients = scalogram_cwt(processed_data=processed, wavelet=cwt_wavelet, scales=scales, sampling_period=sampling_period)
     return np.abs(coefficients)
 
-def save_coefficient_results(subject, syllable, all_coefficients, save_dir):
+def save_coefficient_results_sensors(subject, syllable, all_coefficients, save_dir):
     """ Save computed coefficients to the correct directory """
     os.makedirs(save_dir, exist_ok=True)  # Ensure the directory exists
-    output_file = os.path.join(save_dir, f"{subject}_{syllable}_coefficients.npy")
-    np.save(output_file, all_coefficients)
-    print(f"Saved results to {output_file}")
+    for epoch, sensors in enumerate(all_coefficients):
+        output_file = os.path.join(save_dir, f"{subject}_{syllable}_coefficients_{epoch}.npy")
+        np.save(output_file, sensors)
+        print(f"Saved results to {output_file}")
+
+def save_coefficient_results_roi(subject, syllable, all_coefficients, save_dir):
+    index2roi = {
+        0: "sma",
+        1: "broca",
+        2: "stg",
+        3: "mtg",
+        4: "spt",
+    }
+    os.makedirs(save_dir, exist_ok=True)
+    for roi, roi_block in enumerate(all_coefficients):
+        for epoch_index, epoch_data in enumerate(roi_block):
+            output_file = os.path.join(save_dir, f"{subject}_{syllable}_coefficients_{index2roi[roi]}_{epoch_index}.npy")
+            np.save(output_file, epoch_data)
+            print(f"Saved results to {output_file}")
+
+

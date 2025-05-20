@@ -13,7 +13,6 @@ from torchvision import transforms
 
 from experiment import f1_metric, precision_metric, accuracy_metric, recall_metric
 
-
 def plot_confusion_matrix(cm, classes, title="Confusion Matrix"):
     """Plots the confusion matrix as a heatmap."""
     plt.figure(figsize=(6, 5))
@@ -114,7 +113,47 @@ def cnn_compute_metrics(predictions, labels, num_classes=3):
         "recall": recall["recall"],
         "specificity": avg_specificity,
     }
-    
+
+
+def apply_global_temporal_jitter(coeffs, max_shift=10):
+    """Apply same temporal shift to all sensors."""
+    shift = np.random.randint(-max_shift, max_shift + 1)
+    jittered = np.zeros_like(coeffs)
+    if shift > 0:
+        jittered[:, :, shift:] = coeffs[:, :, :-shift]
+    elif shift < 0:
+        jittered[:, :, :shift] = coeffs[:, :, -shift:]
+    else:
+        jittered = coeffs
+    return jittered
+
+def apply_local_augmentations(coeffs, noise_std=0.01, scale_range=(0.9, 1.1), dropout_prob=0.1):
+    """Apply random per-sensor noise, scaling, and dropout."""
+    coeffs = coeffs.copy()
+    n_sensors = coeffs.shape[0]
+
+    for i in range(n_sensors):
+        # Dropout
+        # if np.random.rand() < dropout_prob:
+        #     coeffs[i] = 0
+        #     continue
+        # Random gain
+        scale = np.random.uniform(*scale_range)
+        coeffs[i] *= scale
+        # Additive noise
+        noise = np.random.normal(0, noise_std, size=coeffs[i].shape)
+        coeffs[i] += noise
+
+    return coeffs
+
+
+def coeff_augment_fn(coeffs):
+    coeffs = apply_global_temporal_jitter(coeffs, max_shift=10)
+    coeffs = apply_local_augmentations(coeffs,
+                                       noise_std=0.01,
+                                       scale_range=(0.9, 1.1),
+                                       dropout_prob=0.05)
+    return coeffs
 
 def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, num_classes=3, num_epochs=10, device="mps", fold=0):
     """
