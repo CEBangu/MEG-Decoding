@@ -275,11 +275,11 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
         val_subset = Subset(dataset, val_index.tolist())
 
         # let's see if some transformations help?
-        train_transforms = transforms.Compose([
-            # transforms.RandomHorizontalFlip(),
-            # transforms.RandomRotation(15),
-            transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
-        ])
+        # train_transforms = transforms.Compose([
+        #     # transforms.RandomHorizontalFlip(),
+        #     # transforms.RandomRotation(15),
+        #     transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
+        # ])
 
         def train_set_collate_fn(batch):
             """
@@ -296,7 +296,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
             shuffle=True, 
             num_workers=8, 
             pin_memory=True,
-            collate_fn=train_set_collate_fn, #transforms only for training set
+            # collate_fn=train_set_collate_fn, #transforms only for training set
             )
         
         val_loader = DataLoader(
@@ -329,7 +329,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
         class_weights = class_weights / class_weights.sum()
         class_weights = class_weights.to(device)
 
-        criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.1)
+        criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.15)
 
         model = model_class(num_classes=num_classes).to(device=device)
         # model.reset_parameters()

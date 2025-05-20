@@ -46,14 +46,19 @@ class LayerFreezeMixin:
 
     def _freeze_most(self):
         """Freeze all but the last 5 feature extraction layers."""
+        # Unfreeze everything first
         for param in self.features.parameters():
             param.requires_grad = True
-        for param in self.features[:-5].parameters():
-            param.requires_grad = False
+        # Freeze all but the last 5 modules
+        feature_modules = list(self.features.children())
+        for layer in feature_modules[:-5]:
+            for param in layer.parameters():
+                param.requires_grad = False
         for param in self.classifier.parameters():
             param.requires_grad = True
+
         trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
-        print("last 5 layers of feature extractor and all of classifier are unfrozen")
+        print("last 5 layers of feature extractor and all classifier layers are unfrozen")
         print(f"Number of trainable parameters: {trainable_params}")
 
     def _no_freeze(self):
@@ -169,23 +174,26 @@ class AlexNetLongDescend(nn.Module, LayerFreezeMixin):
 class AlexNetDescend(nn.Module, LayerFreezeMixin):
     def __init__(self, num_classes=3):
         super().__init__()
-        self.model = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
-        
-        # Keep all layers as they are, including AdaptiveAvgPool2d
-        self.features = self.model.features
-        self.avgpool = self.model.avgpool  # This is AdaptiveAvgPool2d
-        
-        del self.model.classifier
-        
+        base = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        self.features = base.features
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        # self.avgpool = self.model.avgpool  # This is AdaptiveAvgPool2d
+    
         self.classifier = nn.Sequential(
-            nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=9216, out_features=4096), 
-            nn.ReLU(inplace=True),
-            nn.Dropout(p=0.5, inplace=False),
-            nn.Linear(in_features=4096, out_features=2048),
-            nn.ReLU(inplace=True),
-            nn.Linear(in_features=2048, out_features=num_classes)
+            nn.Flatten(),
+            nn.Dropout(0.3),
+            nn.Linear(256, num_classes)
         )
+        # self.classifier = nn.Sequential(
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=9216, out_features=4096), 
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=4096, out_features=2048),
+        #     nn.ReLU(inplace=True),
+        #     nn.Linear(in_features=2048, out_features=num_classes)
+        # )
         # self.classifier = nn.Sequential(
         #     nn.Dropout(p=0.5, inplace=False),
         #     nn.Linear(in_features=9216, out_features=512), 
@@ -200,7 +208,7 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
             x = self.avgpool(x.to("cpu")).to(x.device)
         else:
             x = self.avgpool(x)    
-        x = torch.flatten(x, 1)
+        # x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
     

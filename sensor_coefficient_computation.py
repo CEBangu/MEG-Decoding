@@ -87,7 +87,7 @@ def main():
         # get the mean and std for the z-scoring
         baseline_mean = baseline_coefficients.mean(axis=2, keepdims=True)
         baseline_std = baseline_coefficients.std(axis=2, keepdims=True)
-
+        print(baseline_mean.min())
         # loop through the available syllables
         for syllable in data.data[subject]:
             
