@@ -11,15 +11,45 @@ import numpy as np
 from matplotlib import cm
 
 class AlexNetDataHandler(Dataset):
-    def __init__(self, csv_file, sensor_indices, output_size=(224, 224),
+    def __init__(self, data, sensor_indices, output_size=(224, 224),
                  coeff_augment_fn=None):
         
 
-        self.data=pd.read_csv(csv_file)
+        if isinstance(data, str):
+            self.data=pd.read_csv(data)
+        else:
+            self.data=data.copy()
+
 
         self.sensor_indices = sensor_indices
         self.output_size = output_size
         self.coeff_augment_fn = coeff_augment_fn
+        self.vranges = {
+            "covert_producing": {
+                "broca" : (-1.0216, 5.1914),
+                "sma" : (-1.2358, 2.5938),
+                "stg" : (-1.1492, 3.7411),
+                "mtg" : (-1.0600, 4.7039),
+                "spt" : (-1.2048, 2.9075),
+                "default" : (-1.6452, 2.9506),
+            },
+            "overt_producing":{
+                "broca" : (-1.1808, 2.1983),
+                "sma" : (-1.2840, 1.7483),
+                "stg" : (-1.1861, 2.2555),
+                "mtg" : (-1.1848, 2.2556),
+                "spt" : (-1.2247, 2.0507),
+                "default" : (-1.6302, 3.2613),
+            },
+            "covert_reading": {
+                "broca" : (-0.9872, 5.5451),
+                "sma" : (-1.2200, 2.7116),
+                "stg" : (-1.1269, 3.9844),
+                "mtg" : (-1.0262, 5.0231),
+                "spt" : (-1.1975, 3.0139),
+                "default" : (-1.6403, 3.0206),
+            },
+        }
 
     def __len__(self):
         return len(self.data)
@@ -29,20 +59,17 @@ class AlexNetDataHandler(Dataset):
         file_path = row['FileName'] #double check this
         label = row['Label'] # double check this
 
-        coeffs = np.load(file_path)
+        coeffs = np.load(file_path) # load the coefficients
 
-        if "covert_producing" in file_path:
-            vmin, vmax = None, None
-        elif "covert_reading" in file_path:
-            vmin, vmax = None, None
-        elif "overt_producing" in file_path:
-            vmin, vmax = None, None
-        else:
-            raise ValueError("incorrect file path")
+        if coeffs.ndim == 2: # if its a single channel, add a new axis
+            coeffs = coeffs[np.newaxis, ...] # add a new axis
+
 
         if self.coeff_augment_fn:
             coeffs = self.coeff_augment_fn(coeffs)
         
+        vmin, vmax = self._get_vrange(file_path)
+
         image = self._generate_scalogram(coeffs, self.sensor_indices,
                                     vmin=vmin, vmax=vmax,
                                     output_size=self.output_size)
@@ -86,7 +113,7 @@ class AlexNetDataHandler(Dataset):
         rgb_list = []
         for idx in sensor_indices:
             z = coefficients[idx] # get the coefficients
-            rgb = self.zscore_to_rgb_tensor(z, vmin=vmin, vmax=vmax) #transform them into rgb_tensors
+            rgb = self._zscore_to_rgb_tensor(z, vmin=vmin, vmax=vmax) #transform them into rgb_tensors
             rgb_list.append(rgb)
 
         layout=self._auto_layout_square(len(sensor_indices)) # get layout dimensions
@@ -96,7 +123,22 @@ class AlexNetDataHandler(Dataset):
         # return collage
         return collage_resized
     
+    def _get_vrange(self, file_path):
+        """gets the right conditions based on the vrange dictionary"""
+        file_path = file_path.lower()
+        for condition in self.vranges:
+            if condition in file_path:
+                for roi in self.vranges[condition]:
+                    if roi in file_path:
+                        return self.vranges[condition][roi]
+                # or if we're doing it in sensor space
+                return self.vranges[condition]["default"]
+        return None, None
+    
 
+
+
+# OLD
 # class AlexNetDataHandler(Dataset):
 #     def __init__(self, csv_file):
 #         self.data = pd.read_csv(csv_file)

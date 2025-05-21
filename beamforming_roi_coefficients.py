@@ -2,7 +2,7 @@ import mne
 import os
 import pywt
 import numpy as np
-from wavelets import process_channel, save_coefficient_results
+from wavelets import process_channel, save_coefficient_results_roi
 from mne import set_config
 from argparse import ArgumentParser
 from datahandling import BcomMEG
@@ -355,7 +355,7 @@ def main():
                     # store it
                     roi_array[i, j] = normalized_result
                 # save save save 
-                save_coefficient_results(
+                save_coefficient_results_roi(
                     subject=subject,
                     syllable=syllable,
                     all_coefficients=roi_array,

@@ -51,7 +51,7 @@ def main():
     parser.add_argument("--root", type=str, required=True, help="Root directory of the data")
     
     args = parser.parse_args()
-    root = args.root
+    root = args.root 
     data_type = args.data_type
 
     covert_root_path = op.join(root, "covert", data_type)
@@ -122,7 +122,7 @@ def main():
         stratify=covert_pure_readprod["Label"], 
         random_state=42,
         shuffle=True,
-    )
+    )##
     covert_pure_train_producing, covert_pure_test_producing = train_test_split(
         covert_pure_producing, 
         test_size=0.1, 

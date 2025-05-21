@@ -13,6 +13,8 @@ from torchvision import transforms
 
 from experiment import f1_metric, precision_metric, accuracy_metric, recall_metric
 
+from datahandling import AlexNetDataHandler
+
 def plot_confusion_matrix(cm, classes, title="Confusion Matrix"):
     """Plots the confusion matrix as a heatmap."""
     plt.figure(figsize=(6, 5))
@@ -115,44 +117,43 @@ def cnn_compute_metrics(predictions, labels, num_classes=3):
     }
 
 
-def apply_global_temporal_jitter(coeffs, max_shift=10):
-    """Apply same temporal shift to all sensors."""
-    shift = np.random.randint(-max_shift, max_shift + 1)
-    jittered = np.zeros_like(coeffs)
-    if shift > 0:
-        jittered[:, :, shift:] = coeffs[:, :, :-shift]
-    elif shift < 0:
-        jittered[:, :, :shift] = coeffs[:, :, -shift:]
-    else:
-        jittered = coeffs
-    return jittered
+def apply_global_temporal_jitter(coeffs, max_shift=10, mode="reflect"):
+    """
+    Applies a positive (rightward) time shift to the coefficients.
+    Pads with 'reflect' or 'constant' at the start.
+    Accepts shape (n, scales, time) or (scales, time)
+    """
+    if coeffs.ndim == 2:
+        coeffs = coeffs[None, :, :]  # add sensor/ROI dimension
 
-def apply_local_augmentations(coeffs, noise_std=0.01, scale_range=(0.9, 1.1), dropout_prob=0.1):
+    shift = np.random.randint(1, max_shift + 1)
+    pad_mode = mode if mode in ["reflect", "constant"] else "reflect"
+
+    padded = np.pad(coeffs, ((0, 0), (0, 0), (shift, 0)), mode=pad_mode)
+    return padded[:, :, :coeffs.shape[2]]
+
+def apply_local_augmentations(coeffs, noise_std=0.01, scale_range=(0.9, 1.1)):
     """Apply random per-sensor noise, scaling, and dropout."""
+
     coeffs = coeffs.copy()
     n_sensors = coeffs.shape[0]
 
     for i in range(n_sensors):
-        # Dropout
-        # if np.random.rand() < dropout_prob:
-        #     coeffs[i] = 0
-        #     continue
-        # Random gain
-        scale = np.random.uniform(*scale_range)
+        scale = np.random.uniform(*scale_range) #signal amplitude
         coeffs[i] *= scale
         # Additive noise
-        noise = np.random.normal(0, noise_std, size=coeffs[i].shape)
+        noise = np.random.normal(0, noise_std, size=coeffs[i].shape) # signal noise
         coeffs[i] += noise
 
     return coeffs
 
 
 def coeff_augment_fn(coeffs):
-    coeffs = apply_global_temporal_jitter(coeffs, max_shift=10)
+    coeffs = apply_global_temporal_jitter(coeffs, max_shift=100, mode="constant")
     coeffs = apply_local_augmentations(coeffs,
                                        noise_std=0.01,
-                                       scale_range=(0.9, 1.1),
-                                       dropout_prob=0.05)
+                                       scale_range=(0.9, 1.1)
+                                    )
     return coeffs
 
 def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, num_classes=3, num_epochs=10, device="mps", fold=0):
@@ -243,7 +244,7 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
 
 
 
-def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, freeze_type, project_name=None):
+def cnn_sweep_train(model_type, model_class, device, k, num_classes, indices, dataset, freeze_type, project_name=None, coeff_augment_fn=coeff_augment_fn):
     """
     This function handles the wandb parameter sweep for a given cnn model architecture
 
@@ -263,44 +264,39 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
     group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}"
     run.name = group_name
 
-    labels = dataset.data.iloc[:, 1].values
-
+    labels = dataset["Label"].values
     skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
     fold_results = []
 
     for fold, (train_index, val_index) in enumerate(skf.split(np.arange(len(dataset)), labels)):
         print(f"Fold {fold+1}/{k}")
 
-        train_subset = Subset(dataset, train_index.tolist())
-        val_subset = Subset(dataset, val_index.tolist())
+        df_train = dataset.iloc[train_index].reset_index(drop=True)
+        df_val = dataset.iloc[val_index].reset_index(drop=True)
 
-        # let's see if some transformations help?
-        # train_transforms = transforms.Compose([
-        #     # transforms.RandomHorizontalFlip(),
-        #     # transforms.RandomRotation(15),
-        #     transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
-        # ])
+        train_dataset = AlexNetDataHandler(data=df_train,
+                                            sensor_indices=indices,
+                                            output_size=(224, 224),
+                                            coeff_augment_fn=coeff_augment_fn,
+                                        )
+        
+        val_dataset = AlexNetDataHandler(data=df_val,
+                                            sensor_indices=indices,
+                                            output_size=(224, 224),
+                                            coeff_augment_fn=None,
+                                        )
 
-        def train_set_collate_fn(batch):
-            """
-            This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
-            these in the dataloader)
-            """
-            images, labels = zip(*batch)  # Unpack batch
-            images = [train_transforms(img) for img in images]  # Apply train transforms
-            return torch.stack(images), torch.tensor(labels)
-
+        # DataLoaders - collate got moved to the dataset class
         train_loader = DataLoader(
-            train_subset, 
+            train_dataset, 
             batch_size=config.batch_size, 
             shuffle=True, 
             num_workers=8, 
             pin_memory=True,
-            # collate_fn=train_set_collate_fn, #transforms only for training set
             )
         
         val_loader = DataLoader(
-            val_subset, 
+            val_dataset, 
             batch_size=config.batch_size, 
             shuffle=False
             )
@@ -309,8 +305,8 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
         assert not set(train_index).intersection(set(val_index)), "Train and validation sets overlap!"
 
         # Count the number of labels in each set
-        train_labels = [dataset.data.iloc[i, 1] for i in train_index]
-        val_labels = [dataset.data.iloc[i, 1] for i in val_index]
+        train_labels = df_train["Label"].values # datasets got made with an extra column so watch out for indexing!
+        val_labels = df_val["Label"].values
 
         unique_train_labels, train_counts = np.unique(np.array(train_labels), return_counts=True)
         unique_val_labels, val_counts = np.unique(np.array(val_labels), return_counts=True)
@@ -332,14 +328,8 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
         criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.15)
 
         model = model_class(num_classes=num_classes).to(device=device)
-        # model.reset_parameters()
-        model.freeze_type(freeze_type=freeze_type)
 
-        # Honestly, the models at this stage are pretty small so actually parallelizing them will probably be slower       
-        # # Distributed GPU training
-        # if torch.cuda.device_count() > 1:
-        #     print(f"Using {torch.cuda.device_count()} GPUs")
-        #     model = nn.DataParallel(model)
+        model.freeze_type(freeze_type=freeze_type)
 
         optimizer = get_optimizer(name=config.optimizer, 
                                   model=model, 

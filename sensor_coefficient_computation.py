@@ -6,7 +6,7 @@ import numpy as np
 from datahandling import BcomMEG
 import time
 from joblib import Parallel, delayed
-from wavelets import process_channel, save_coefficient_results
+from wavelets import process_channel, save_coefficient_results_sensors
 
 def main():
     parser = argparse.ArgumentParser(description="This script computes the Continuous Wavelet Transform coefficients for the Scalograms")
@@ -128,7 +128,7 @@ def main():
                 print(f"Processing time for subject {subject}, syllable {syllable}, epoch {epoch}: {end_time - start_time} seconds")
             
             # save the results
-            save_coefficient_results(
+            save_coefficient_results_sensors(
                 subject=subject,
                 syllable=syllable,
                 all_coefficients=all_coefficients,

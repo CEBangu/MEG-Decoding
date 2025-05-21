@@ -2,6 +2,7 @@ import argparse
 import os
 import wandb
 import torch
+import pandas as pd
 
 ## custom imports
 
@@ -20,6 +21,7 @@ def main():
     parser.add_argument('--num_classes', type=int, default=3, help="how many classes")
     parser.add_argument('--project_name', type=str, default=None, help="project name")
     parser.add_argument('--labels', type=str, required=True, help='path to label csv')
+    parser.add_argument('--indices', type=str, required=True, help='indices of the sensors to use')
 
     args = parser.parse_args()
 
@@ -35,7 +37,7 @@ def main():
     "metric": {"name": "val_loss", "goal": "minimize"}, 
     "parameters": {
         "learning_rate": {"values": [1e-4,1e-3, 1e-5, 3e-3, 3e-4, 3e-5]}, #0.0001, 3e-4]},
-        "batch_size": {"values": [128, 64, 256,]}, #128]},
+        "batch_size": {"values": [64]}, #128]},
         "optimizer": {"values": ["adam"]}, #, "sgd" "rmsprop", "adamw_torch"]},
         "weight_decay": {"values": [1e-4, 1e-3, 1e-5, 0.0]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
     },
@@ -47,7 +49,8 @@ def main():
     wandb.login() # login api key stored in env var
     sweep_id = wandb.sweep(sweep_config, project=args.project_name)
     labels_csv = args.labels
-    dataset = AlexNetDataHandler(csv_file=labels_csv)
+    indices = [int(i.strip()) for i in args.indices.split(",")]
+    dataset = pd.read_csv(labels_csv)
 
     model_class = model_dict[args.model_type]
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -65,6 +68,7 @@ def main():
                     device=device,
                     k=k,
                     num_classes=num_classes,
+                    indices=indices,
                     freeze_type=freeze_type,
                     project_name=args.project_name
                 ),

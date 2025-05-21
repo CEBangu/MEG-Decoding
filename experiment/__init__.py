@@ -10,11 +10,19 @@ __all__ = [
     'precision_metric', 
     'recall_metric',
     'accuracy_metric'
-    ]
+]
 
-from .cnn_experiment_funcs import cnn_compute_metrics, cnn_train_val_wandb, cnn_sweep_train, get_optimizer
+from .cnn_experiment_funcs import cnn_compute_metrics, cnn_train_val_wandb, cnn_sweep_train, get_optimizer, apply_global_temporal_jitter, apply_local_augmentations, coeff_augment_fn
 
-__all__ += ['cnn_compute_metrics', 'cnn_train_val_wandb', 'cnn_sweep_train', 'get_optimizer']
+__all__ += [
+    'cnn_compute_metrics',
+    'cnn_train_val_wandb', 
+    'cnn_sweep_train', 
+    'get_optimizer',
+    'apply_global_temporal_jitter',
+    'apply_local_augmentations',
+    'coeff_augment_fn'
+]
 
 from .vit_experiment_funcs import collate_fn, vit_compute_metrics, vit_sweep_kfold
 

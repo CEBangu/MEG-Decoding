@@ -49,13 +49,14 @@ echo "FREEZE_TYPE: $FREEZE_TYPE"
 echo "NUM_FOLDS: $NUM_FOLDS"
 echo "LABELS: $LABELS"
 echo "PROJECT_NAME: $PROJECT_NAME"
+echo "INDICES: $INDICES"
 echo "NUM_CLASSES: $NUM_CLASSES"
 
 # set pythonpath so we can import the custom modules
 export PYTHONPATH="$HOME/MEG-Decoding:$PYTHONPATH"
 echo "Python path: $PYTHONPATH"
 
-CMD="python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --project_name $PROJECT_NAME --labels $LABELS"
+CMD="python3 $HOME/MEG-Decoding/cnn_training.py --model_type $MODEL_TYPE --freeze_type $FREEZE_TYPE --num_folds $NUM_FOLDS --project_name $PROJECT_NAME --labels $LABELS --indices $INDICES"
 # Check if NUM_CLASSES is defined and add it to the command
 if [[ -n "${NUM_CLASSES}" ]]; then
     CMD+=" --num_classes $NUM_CLASSES"
