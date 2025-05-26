@@ -33,5 +33,6 @@ srun python3 $HOME/MEG-Decoding/plotting_script.py \
     --data_dir "$DATA_DIR" --save_dir "$SAVE_DIR" \
     --dimensions $DIMENSIONS --cmap "$CMAP" --index_list "$INDEX_LIST" \
     --resolution "$RESOLUTION" --epoch_workers 4 --task_id $SLURM_ARRAY_TASK_ID \
+    --vmin $VMIN --vmax $VMAX \
     ${AVERAGE:+--average}
     

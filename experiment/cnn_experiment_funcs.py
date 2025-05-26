@@ -237,9 +237,8 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
 
         # let's see if some transformations help?
         # train_transforms = transforms.Compose([
-        #     # transforms.RandomHorizontalFlip(),
-        #     # transforms.RandomRotation(15),
-        #     transforms.ColorJitter(0.1, 0.1, 0.1, 0.1),
+        #     transforms.RandomAffine(degrees=0, translate=(0.1, 0.0)),
+        #     transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
         # ])
 
         def train_set_collate_fn(batch):

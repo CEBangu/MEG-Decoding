@@ -177,30 +177,14 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
         base = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
         self.features = base.features
 
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        # self.avgpool = self.model.avgpool  # This is AdaptiveAvgPool2d
+        self.avgpool = nn.AdaptiveAvgPool2d((6, 6)) # can mess around with this
     
-        self.classifier = nn.Sequential(
+        self.classifier = nn.Sequential( # can also mess around with this
             nn.Flatten(),
             nn.Dropout(0.3),
-            nn.Linear(256, num_classes)
+            nn.Linear(9216, num_classes)
         )
-        # self.classifier = nn.Sequential(
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=9216, out_features=4096), 
-        #     nn.ReLU(inplace=True),
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=4096, out_features=2048),
-        #     nn.ReLU(inplace=True),
-        #     nn.Linear(in_features=2048, out_features=num_classes)
-        # )
-        # self.classifier = nn.Sequential(
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=9216, out_features=512), 
-        #     nn.ReLU(inplace=True),
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=512, out_features=num_classes),
-        # )
+
         
     def forward(self, x):
         x = self.features(x)  # Feature extraction
@@ -212,3 +196,19 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
         x = self.classifier(x)
         return x
     
+        # self.classifier = nn.Sequential(
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=9216, out_features=4096), 
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=4096, out_features=2048),
+        #     nn.ReLU(inplace=True),
+        #     nn.Linear(in_features=2048, out_features=num_classes)
+        # self.classifier = nn.Sequential(
+        # )
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=9216, out_features=512), 
+        #     nn.ReLU(inplace=True),
+        #     nn.Dropout(p=0.5, inplace=False),
+        #     nn.Linear(in_features=512, out_features=num_classes),
+        # )

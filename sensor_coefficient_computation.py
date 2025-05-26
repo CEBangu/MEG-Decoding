@@ -53,7 +53,7 @@ def main():
     B = 1.0 # wavelet bandwith (higher means more frequencies at each scale, but less precision in peak timing)
     C = 1.0 # central frequency (higher means more oscialltions per time window, meaning higher frequency features per scale)
     cwt_wavelet = f'{cwt_wavelet_name}{B}-{C}'
-    frequencies = np.logspace(np.log10(1), np.log10(sampling_rate/2), log_samples)
+    frequencies = np.logspace(np.log10(1), np.log10(150), log_samples)
     sampling_period = 1/sampling_rate
     scales = pywt.central_frequency(wavelet=cwt_wavelet)/ (frequencies * sampling_period)
 

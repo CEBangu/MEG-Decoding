@@ -12,7 +12,7 @@ class ScalogramPlotter:
     It takes in the type of dimensions of the plot, the colormap to use, 
     the directory of the data, and the directory to save the plots.
     """
-    def __init__(self, dimensions: tuple, cmap: str, data_dir: str, save_dir: str, index_list: list = list(range(247)), resolution: int = 224, average: bool = False): 
+    def __init__(self, dimensions: tuple, cmap: str, data_dir: str, save_dir: str, index_list: list = list(range(247)), resolution: int = 224, average: bool = False, vmin=-5, vmax=5): 
         self.dimensions = dimensions
         self.cmap = cmap
         self.data_dir = data_dir
@@ -20,6 +20,8 @@ class ScalogramPlotter:
         self.index_list = index_list 
         self.average = average
         self.resolution = resolution
+        self.vmin = vmin
+        self.vmax = vmax
 
         self.figsize= (8, 8) # this is just the standard
 
@@ -49,7 +51,7 @@ class ScalogramPlotter:
             if channel_index in self.index_list:
                 # plots them as a square grid
                 r, c = divmod(subplot_index, self.dimensions[0])
-                ax[r, c].pcolormesh(channel, cmap=self.cmap)
+                ax[r, c].pcolormesh(channel, cmap=self.cmap, vmin=self.vmin, vmax=self.vmax)
                 ax[r, c].set_xticks([])
                 ax[r, c].set_yticks([])
                 subplot_index += 1
@@ -94,7 +96,7 @@ class ScalogramPlotter:
         for roi_index, roi in enumerate(coefficients):
             if roi_index in self.index_list:
                 r, c = divmod(subplot_index, self.dimensions[0])
-                ax[r, c].pcolormesh(roi, cmap=self.cmap)
+                ax[r, c].pcolormesh(roi, cmap=self.cmap, vmin=self.vmin, vmax=self.vmax)
                 ax[r, c].set_xticks([])
                 ax[r, c].set_yticks([])
                 subplot_index += 1
@@ -123,7 +125,7 @@ class ScalogramPlotter:
         fig, axes = plt.subplots(figsize=self.figsize)
         
         average = np.mean(np.abs(coefficients), axis=0)
-        axes.pcolormesh(average, cmap=self.cmap)
+        axes.pcolormesh(average, cmap=self.cmap, vmin=self.vmin, vmax=self.vmax)
         axes.set_xticks([])
         axes.set_yticks([])
         axes.spines['top'].set_visible(False)

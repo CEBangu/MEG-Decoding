@@ -36,7 +36,7 @@ def main():
     "parameters": {
         "learning_rate": {"values": [1e-4,1e-3, 1e-5, 3e-3, 3e-4, 3e-5]}, #0.0001, 3e-4]},
         "batch_size": {"values": [128, 64, 256,]}, #128]},
-        "optimizer": {"values": ["adam"]}, #, "sgd" "rmsprop", "adamw_torch"]},
+        "optimizer": {"values": ["adamw_torch"]}, #, "sgd" "rmsprop", "adam"]},
         "weight_decay": {"values": [1e-4, 1e-3, 1e-5, 0.0]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
     },
     "early_terminate": { # stop training if its not working. 

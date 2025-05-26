@@ -61,13 +61,15 @@ def main():
     parser.add_argument("--data_dir", type=str, required=True, help="Directory of data to plot")
     parser.add_argument("--save_dir", type=str, required=True, help="Directory to save the plots")
     parser.add_argument("--dimensions", type=int, nargs=2, default=[16, 16], help="Dimensions of the plot")
-    parser.add_argument("--cmap", type=str, default="turbo", help="Colormap to use")
+    parser.add_argument("--cmap", type=str, default="viridis", help="Colormap to use")
     parser.add_argument("--index_list", type=str, default=",".join(map(str, range(247))),
                         help="Comma-separated list of indices to plot")
     parser.add_argument("--resolution", type=int, default=224, help="Resolution of the plot")
     parser.add_argument("--average", action="store_true", help="Whether to average the data before plotting")
     parser.add_argument("--epoch_workers", type=int, default=1, help="Number of workers to process epochs in parallel")
     parser.add_argument("--task_id", type=int, default=0, help="SLURM array task id")
+    pareser.add_argument("--vmin", action=int, help="vmin for the scalogram")
+    parser.add_argument("--vmax", action=int, help="vmax for the scalogram")
     args = parser.parse_args()
 
     # Convert comma-separated index list to a list of integers.
@@ -80,7 +82,9 @@ def main():
         save_dir=args.save_dir,
         index_list=args.index_list,
         resolution=args.resolution,
-        average=args.average
+        average=args.average,
+        vmin=args.vmin,
+        vmax=args.vmax
     )
 
     # Get a sorted list of all .npy files.
