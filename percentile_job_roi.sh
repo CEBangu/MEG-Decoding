@@ -7,14 +7,14 @@
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
 
-# DATA_DIR=/pasteur/appa/scratch/cbangu/coefficients/covert_producing_roi_beamforming
+DATA_DIR=/pasteur/appa/scratch/cbangu/coefficients/covert_producing_roi_beamforming
 # DATA_DIR=/pasteur/appa/scratch/cbangu/coefficients/covert_reading_roi_beamforming
-DATA_DIR=/pasteur/appa/scratch/cbangu/coefficients/overt_producing_roi_beamforming
+# DATA_DIR=/pasteur/appa/scratch/cbangu/coefficients/overt_producing_roi_beamforming
 CHUNK_INDEX=${SLURM_ARRAY_TASK_ID}
 TOTAL_CHUNKS=50
-# OUTPUT_DIR=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_roi_CP
-# OUTPUT_DIR=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_roi_CR
-OUTPUT_DIR=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_roi_OP
+OUTPUT_DIR=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_roi_CP
+# OUTPUT_DIR=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_roi_CR
+# OUTPUT_DIR=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_roi_OP
 
 if [ -f "$HOME/venvs/coefficients_env/bin/activate" ]; then
     source "$HOME/venvs/coefficients_env/bin/activate"

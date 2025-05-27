@@ -68,8 +68,8 @@ def main():
     parser.add_argument("--average", action="store_true", help="Whether to average the data before plotting")
     parser.add_argument("--epoch_workers", type=int, default=1, help="Number of workers to process epochs in parallel")
     parser.add_argument("--task_id", type=int, default=0, help="SLURM array task id")
-    pareser.add_argument("--vmin", action=int, help="vmin for the scalogram")
-    parser.add_argument("--vmax", action=int, help="vmax for the scalogram")
+    parser.add_argument("--vmin", type=float, help="vmin for the scalogram")
+    parser.add_argument("--vmax", type=float, help="vmax for the scalogram")
     args = parser.parse_args()
 
     # Convert comma-separated index list to a list of integers.

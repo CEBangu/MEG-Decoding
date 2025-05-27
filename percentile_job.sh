@@ -12,14 +12,14 @@
 DATA_DIR=/pasteur/appa/scratch/cbangu/coefficients/overt_producing
 TOTAL_CHUNKS=100
 CHUNK_INDEX=${SLURM_ARRAY_TASK_ID}
-# OUTFILE=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_CP/percentile_${CHUNK_INDEX}.csv
-# OUTFILE=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_CR/percentile_${CHUNK_INDEX}.csv
-OUTFILE=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_OP/percentile_${CHUNK_INDEX}.csv
+# OUTFILE=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_CP/percentile_${CHUNK_INDEX}.csv
+# OUTFILE=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_CR/percentile_${CHUNK_INDEX}.csv
+OUTFILE=/pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_OP/percentile_${CHUNK_INDEX}.csv
 
-# mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_CP
-# mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_CR
-mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_OP
-mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles_OP
+# # mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_CP
+# # mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_CR
+# mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_OP
+# mkdir -p /pasteur/appa/homes/cbangu/MEG-Decoding/percentiles/percentiles_OP
 
 
 if [ -f "$HOME/venvs/coefficients_env/bin/activate" ]; then
