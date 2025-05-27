@@ -11,13 +11,13 @@ class LayerFreezeMixin:
     without having to repeat this code over and over again"""
    
     def freeze_type(self, freeze_type=None):
-        freeze_types = ["final", "full", "most", "none"]
+        freeze_types = ["final", "feature", "most", "none"]
         if freeze_type not in freeze_types:
             raise ValueError(f'freeze_type must be {freeze_types}')
 
         if freeze_type == "final":
             self._final_only()
-        elif freeze_type == "full":
+        elif freeze_type == "feature":
             self._features_only()
         elif freeze_type == "most":
             self._freeze_most()
@@ -179,10 +179,21 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
 
         self.avgpool = nn.AdaptiveAvgPool2d((6, 6)) # can mess around with this
     
-        self.classifier = nn.Sequential( # can also mess around with this
-            nn.Flatten(),
-            nn.Dropout(0.3),
-            nn.Linear(9216, num_classes)
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=9216, out_features=4096), 
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=2048),
+            nn.ReLU(inplace=True),
+            nn.Linear(in_features=2048, out_features=num_classes)
+        )
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=9216, out_features=512), 
+            nn.ReLU(inplace=True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=512, out_features=num_classes),
         )
 
         
@@ -196,19 +207,78 @@ class AlexNetDescend(nn.Module, LayerFreezeMixin):
         x = self.classifier(x)
         return x
     
-        # self.classifier = nn.Sequential(
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=9216, out_features=4096), 
-        #     nn.ReLU(inplace=True),
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=4096, out_features=2048),
-        #     nn.ReLU(inplace=True),
-        #     nn.Linear(in_features=2048, out_features=num_classes)
-        # self.classifier = nn.Sequential(
-        # )
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=9216, out_features=512), 
-        #     nn.ReLU(inplace=True),
-        #     nn.Dropout(p=0.5, inplace=False),
-        #     nn.Linear(in_features=512, out_features=num_classes),
-        # )
+
+class AlexNetBigHead(nn.Module, LayerFreezeMixin):
+    def __init__(self, num_classes=3):
+        super().__init__()
+        base = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        self.features = base.features
+
+        self.avgpool = nn.AdaptiveAvgPool2d((6, 6)) # can mess around with this
+    
+        self.classifier = nn.Sequential( # can also mess around with this
+            nn.Flatten(),
+            nn.Dropout(0.3),
+            nn.Linear(256 * 6 * 6, num_classes)
+        )
+
+        
+    def forward(self, x):
+        x = self.features(x)  # Feature extraction
+        if x.device.type == "mps":
+            x = self.avgpool(x.to("cpu")).to(x.device)
+        else:
+            x = self.avgpool(x)    
+        # x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x
+
+class AlexNetSmallHead(nn.Module, LayerFreezeMixin):
+    def __init__(self, num_classes=3):
+        super().__init__()
+        base = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        self.features = base.features
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1)) # can mess around with this
+    
+        self.classifier = nn.Sequential( # can also mess around with this
+            nn.Flatten(),
+            nn.Dropout(0.3),
+            nn.Linear(256, num_classes)
+        )
+
+        
+    def forward(self, x):
+        x = self.features(x)  # Feature extraction
+        if x.device.type == "mps":
+            x = self.avgpool(x.to("cpu")).to(x.device)
+        else:
+            x = self.avgpool(x)    
+        # x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x
+    
+class AlexNetMediumHead(nn.Module, LayerFreezeMixin):
+    def __init__(self, num_classes=3):
+        super().__init__()
+        base = models.alexnet(weights=models.AlexNet_Weights.IMAGENET1K_V1)
+        self.features = base.features
+
+        self.avgpool = nn.AdaptiveAvgPool2d((3, 3)) # can mess around with this
+    
+        self.classifier = nn.Sequential( # can also mess around with this
+            nn.Flatten(),
+            nn.Dropout(0.3),
+            nn.Linear(256 * 3 * 3, num_classes)
+        )
+
+        
+    def forward(self, x):
+        x = self.features(x)  # Feature extraction
+        if x.device.type == "mps":
+            x = self.avgpool(x.to("cpu")).to(x.device)
+        else:
+            x = self.avgpool(x)    
+        # x = torch.flatten(x, 1)
+        x = self.classifier(x)
+        return x

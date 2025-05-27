@@ -6,7 +6,7 @@ import torch
 ## custom imports
 
 from datahandling import AlexNetDataHandler
-from models.MEGAlexNets import AlexNetDescend, AlexNetFinalOnly, AlexNetLongDescend, AlexNetSuddenDescend
+from models.MEGAlexNets import AlexNetDescend, AlexNetFinalOnly, AlexNetLongDescend, AlexNetSuddenDescend, AlexNetBigHead, AlexNetMediumHead, AlexNetSmallHead
 from experiment import cnn_sweep_train
 
 
@@ -27,17 +27,21 @@ def main():
         "AlexNetFinalOnly": AlexNetFinalOnly,
         "AlexNetDescend": AlexNetDescend,
         "AlexNetLongDescend" : AlexNetLongDescend,
-        "AlexNetSuddenDescend": AlexNetSuddenDescend
+        "AlexNetSuddenDescend": AlexNetSuddenDescend,
+        "AlexNetBigHead": AlexNetBigHead,
+        "AlexNetMediumHead": AlexNetMediumHead,
+        "AlexNetSmallHead": AlexNetSmallHead,
     }
 
     sweep_config = {
     "method": "bayes",
     "metric": {"name": "val_loss", "goal": "minimize"}, 
     "parameters": {
-        "learning_rate": {"values": [1e-4,1e-3, 1e-5, 3e-3, 3e-4, 3e-5]}, #0.0001, 3e-4]},
-        "batch_size": {"values": [128, 64, 256,]}, #128]},
+        "learning_rate": {"values": [1e-4, 1e-5, 1e-6, 3e-4, 3e-5, 3e-6]}, #0.0001, 3e-4]},
+        "batch_size": {"values": [128, 64, 256]}, #128]},
         "optimizer": {"values": ["adamw_torch"]}, #, "sgd" "rmsprop", "adam"]},
-        "weight_decay": {"values": [1e-4, 1e-3, 1e-5, 0.0]}, #1e-2, 1e-3, 0.0]}, # let's try some weight decay
+        "weight_decay": {"values": [1e-4, 1e-5, 0.0]}, 
+        "freeze_type": {"values": ["none", "feature"]}, # "none", "conv", "all"
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
@@ -55,7 +59,7 @@ def main():
 
     # change later, just want to test it out for now. 
     k = args.num_folds # if we find one that seems to work then maybe switch to 10, otherwise it just takes too long
-    k = 3
+    # k = 3
     num_classes = args.num_classes
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
@@ -65,10 +69,9 @@ def main():
                     device=device,
                     k=k,
                     num_classes=num_classes,
-                    freeze_type=freeze_type,
                     project_name=args.project_name
                 ),
-                count=15) # need to change the number of hyperparameters searched over.
+                count=50) # need to change the number of hyperparameters searched over.
 
 
 if __name__ == "__main__":

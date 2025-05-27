@@ -24,18 +24,22 @@ def plot_confusion_matrix(cm, classes, title="Confusion Matrix"):
     plt.show()
 
 
-def get_optimizer(name, model, lr, weight_decay):
+def get_optimizer(name, param_groups, weight_decay):
     """Dynamically select an optimizer just like Hugging Face Trainer."""
-    if name == "adamw_torch":
-        return optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
-    elif name == "sgd":
-        return optim.SGD(model.parameters(), lr=lr, momentum=0.90, weight_decay=weight_decay)
-    elif name == "adam":
-        return optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    elif name == "rmsprop":
-        return optim.RMSprop(model.parameters(), lr=lr, weight_decay=weight_decay)
+    Optim = { #get one of these depending on what the run config is
+        "adam": torch.optim.Adam,
+        "adamw_torch": torch.optim.AdamW,
+        "sgd": torch.optim.SGD,
+        "rmsprop": torch.optim.RMSprop,
+    } [name.lower()] 
+
+    if isinstance(param_groups, list):
+        # If param_groups is already a list, use it directly
+        return Optim(param_groups, weight_decay=weight_decay)
     else:
-        raise ValueError(f"Unknown optimizer: {name}")
+        # If param_groups is a model, use its parameters
+        lr = param_groups.pop("lr")
+        return Optim(param_groups["params"], lr=lr, weight_decay=weight_decay)
 
 
 
@@ -120,10 +124,11 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
     """
     This function handles the train/validation loop for the cnn model(s). 
     It trains the model, keeps tracks of the train and validation results, and logs them to wandb
+    Also does early stopping based on validation loss.
     
     """
-
-    best_val_acc = 0.0
+    best_val_loss = float('inf')
+    epochs_no_improvement = 0
     fold_val_losses = []
     # config = wandb.config if config is None else config
     
@@ -140,6 +145,12 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
             outputs = model(images)
             loss = criterion(outputs, labels)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), 
+                max_norm=1.0,  # Clip gradients to prevent exploding gradients
+                norm_type=2.0  # L2 norm
+            )
+
             optimizer.step()
 
             running_loss += loss.item() * images.size(0)  # Sum up batch loss
@@ -174,7 +185,8 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
             for val_images, val_targets in val_loader:
                 val_images, val_targets = val_images.to(device), val_targets.to(device)
                 val_outputs = model(val_images)
-                val_loss += criterion(val_outputs, val_targets).item() * val_images.size(0)  # Accumulate batch loss
+                loss = criterion(val_outputs, val_targets)
+                val_loss += loss.item() * val_images.size(0)  # Accumulate batch loss
 
                 _, val_predicted = val_outputs.max(1)
                 val_total += val_targets.size(0)
@@ -198,13 +210,21 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
 
         print(f"Validation - Loss: {val_loss:.4f}, Accuracy: {100.0 * val_correct / val_total:.2f}%")
 
-        best_val_acc = max(best_val_acc, 100.0 * val_correct / val_total)
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            epochs_no_improvement = 0
+        else:
+            epochs_no_improvement += 1
 
-    return np.mean(fold_val_losses)  # Is this the right return?
+        if epochs_no_improvement >= 6:
+            print("Stopping early - no improvement")
+            break  # Early stopping after 5 epochs without improvement
+
+    return np.mean(fold_val_losses)
 
 
 
-def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, freeze_type, project_name=None):
+def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, project_name=None):
     """
     This function handles the wandb parameter sweep for a given cnn model architecture
 
@@ -221,7 +241,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
     )
 
     config = wandb.config
-    group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}"
+    group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}_freeze:{config.freeze_type}"
     run.name = group_name
 
     labels = dataset.data.iloc[:, 1].values
@@ -241,20 +261,20 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
         #     transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
         # ])
 
-        def train_set_collate_fn(batch):
-            """
-            This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
-            these in the dataloader)
-            """
-            images, labels = zip(*batch)  # Unpack batch
-            images = [train_transforms(img) for img in images]  # Apply train transforms
-            return torch.stack(images), torch.tensor(labels)
+        # def train_set_collate_fn(batch):
+        #     """
+        #     This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
+        #     these in the dataloader)
+        #     """
+        #     images, labels = zip(*batch)  # Unpack batch
+        #     images = [train_transforms(img) for img in images]  # Apply train transforms
+        #     return torch.stack(images), torch.tensor(labels)
 
         train_loader = DataLoader(
             train_subset, 
             batch_size=config.batch_size, 
             shuffle=True, 
-            num_workers=8, 
+            num_workers=6, 
             pin_memory=True,
             # collate_fn=train_set_collate_fn, #transforms only for training set
             )
@@ -293,18 +313,20 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
 
         model = model_class(num_classes=num_classes).to(device=device)
         # model.reset_parameters()
-        model.freeze_type(freeze_type=freeze_type)
+        model.freeze_type(freeze_type=config.freeze_type)
 
-        # Honestly, the models at this stage are pretty small so actually parallelizing them will probably be slower       
-        # # Distributed GPU training
-        # if torch.cuda.device_count() > 1:
-        #     print(f"Using {torch.cuda.device_count()} GPUs")
-        #     model = nn.DataParallel(model)
+        # from dash et al
+        if config.freeze_type == "feature": 
+            pg = {"params": model.classifier.parameters(), "lr": config.learning_rate * 20}
+        else: 
+            pg = [{"params": model.features.parameters(), "lr": config.learning_rate},
+                  {"params": model.classifier.parameters(), "lr": config.learning_rate * 20}]
 
-        optimizer = get_optimizer(name=config.optimizer, 
-                                  model=model, 
-                                  lr=config.learning_rate, 
-                                  weight_decay=config.weight_decay)
+        optimizer = get_optimizer(
+            name=config.optimizer, 
+            param_groups=pg, 
+            weight_decay=config.weight_decay
+        )
 
         avg_val_loss = cnn_train_val_wandb(model=model, 
                                        train_loader=train_loader, 
@@ -312,7 +334,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, fr
                                        criterion=criterion, 
                                        optimizer=optimizer,
                                        num_classes=num_classes, 
-                                       num_epochs=50, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
+                                       num_epochs=60, # for the smaller datasets, 40 is not enough, and 60 seemed too short as well.
                                        device=device,  
                                        fold=fold)
         fold_results.append(avg_val_loss)
