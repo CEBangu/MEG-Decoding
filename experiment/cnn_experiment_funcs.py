@@ -209,16 +209,17 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
         })
 
         print(f"Validation - Loss: {val_loss:.4f}, Accuracy: {100.0 * val_correct / val_total:.2f}%")
+        
+        if len(fold_val_losses) > 10:  # Only start checking for early stopping after 10 epochs
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                epochs_no_improvement = 0
+            else:
+                epochs_no_improvement += 1
 
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            epochs_no_improvement = 0
-        else:
-            epochs_no_improvement += 1
-
-        if epochs_no_improvement >= 6:
-            print("Stopping early - no improvement")
-            break  # Early stopping after 5 epochs without improvement
+            if epochs_no_improvement >= 10:  # Early stopping after 10 epochs without improvement
+                print("Stopping early - no improvement")
+                break  # Early stopping after 10 epochs without improvement
 
     return np.mean(fold_val_losses)
 
@@ -241,7 +242,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, pr
     )
 
     config = wandb.config
-    group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}_freeze:{config.freeze_type}"
+    group_name = f"CNN_lr:{config.learning_rate}_optim:{config.optimizer}_batch:{config.batch_size}_wd:{config.weight_decay}_freeze:{config.freeze_type}_transforms:{config.transforms}"
     run.name = group_name
 
     labels = dataset.data.iloc[:, 1].values
@@ -256,19 +257,21 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, pr
         val_subset = Subset(dataset, val_index.tolist())
 
         # let's see if some transformations help?
-        # train_transforms = transforms.Compose([
-        #     transforms.RandomAffine(degrees=0, translate=(0.1, 0.0)),
-        #     transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
-        # ])
+        train_transforms = transforms.Compose([
+            transforms.RandomAffine(degrees=0, translate=(0.1, 0.0)),
+            transforms.ColorJitter(brightness=0.05, contrast=0.05, saturation=0.05, hue=0.05),
+        ])
 
-        # def train_set_collate_fn(batch):
-        #     """
-        #     This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
-        #     these in the dataloader)
-        #     """
-        #     images, labels = zip(*batch)  # Unpack batch
-        #     images = [train_transforms(img) for img in images]  # Apply train transforms
-        #     return torch.stack(images), torch.tensor(labels)
+        def train_set_collate_fn(batch):
+            """
+            This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
+            these in the dataloader)
+            """
+            images, labels = zip(*batch)  # Unpack batch
+            images = [train_transforms(img) for img in images]  # Apply train transforms
+            return torch.stack(images), torch.tensor(labels)
+        
+        collate = True if config.transforms == "time_color" else None
 
         train_loader = DataLoader(
             train_subset, 
@@ -276,7 +279,7 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, pr
             shuffle=True, 
             num_workers=6, 
             pin_memory=True,
-            # collate_fn=train_set_collate_fn, #transforms only for training set
+            collate_fn=train_set_collate_fn if collate else None, #transforms only for training set
             )
         
         val_loader = DataLoader(

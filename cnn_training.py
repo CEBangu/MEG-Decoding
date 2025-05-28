@@ -15,7 +15,6 @@ def main():
     parser = argparse.ArgumentParser(description="This script runs the KFold validation and Parameter Sweep for the CNN models")
 
     parser.add_argument('--model_type', type=str, required=True, help="The model architecture you want to train")
-    parser.add_argument('--freeze_type', type=str, required=True, help="The kind of layer freezing you want to apply")
     parser.add_argument('--num_folds', type=int, required=True, help="how many k folds")
     parser.add_argument('--num_classes', type=int, default=3, help="how many classes")
     parser.add_argument('--project_name', type=str, default=None, help="project name")
@@ -37,15 +36,16 @@ def main():
     "method": "bayes",
     "metric": {"name": "val_loss", "goal": "minimize"}, 
     "parameters": {
-        "learning_rate": {"values": [1e-4, 1e-5, 1e-6, 3e-4, 3e-5, 3e-6]}, #0.0001, 3e-4]},
+        "learning_rate": {"values": [1e-3, 1e-4, 1e-5, 1e-6, 3e-4, 3e-5, 3e-6]}, #0.0001, 3e-4]},
         "batch_size": {"values": [128, 64, 256]}, #128]},
         "optimizer": {"values": ["adamw_torch"]}, #, "sgd" "rmsprop", "adam"]},
-        "weight_decay": {"values": [1e-4, 1e-5, 0.0]}, 
-        "freeze_type": {"values": ["none", "feature"]}, # "none", "conv", "all"
+        "weight_decay": {"values": [1e-4, 1e-5, 0.0, 1e-3]},
+        "freeze_type": {"values": ["none", "feature"]},
+        "transforms": {"values": ["none", "time_color"]} # "none", "conv", "all"
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",
-        "min_iter": 5
+        "min_iter": 20,
     }
 }
     wandb.login() # login api key stored in env var
@@ -55,11 +55,10 @@ def main():
 
     model_class = model_dict[args.model_type]
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    freeze_type = args.freeze_type
 
     # change later, just want to test it out for now. 
     k = args.num_folds # if we find one that seems to work then maybe switch to 10, otherwise it just takes too long
-    # k = 3
+    k = 9
     num_classes = args.num_classes
     wandb.agent(sweep_id, 
                 function=lambda:cnn_sweep_train(
