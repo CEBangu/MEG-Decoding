@@ -72,7 +72,7 @@ class ScalogramPlotter:
             axes.spines['bottom'].set_visible(False)
 
         # remove the space between the subplots
-        plt.subplots_adjust(left=0, right=1, bottom=0, top=1, hspace=0, wspace=0)
+        plt.subplots_adjust(left=0, right=1, bottom=0, top=0.94, hspace=0, wspace=0)
         fig.patch.set_visible(False)
 
         return fig
