@@ -352,3 +352,92 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, pr
     wandb.log({"avg_val_loss": np.mean(fold_results)})
 
     wandb.finish()    
+
+
+
+def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes, num_epochs, device='cuda'):
+    """
+    This funciton handles the testing loop for the cnn model(s).
+    It trains the model, keeps tracks of the train and test results, and logs them to wandb
+    """
+    test_metrics = {}
+
+
+    for epoch in range(num_epochs):
+        model.train()
+        running_loss, correct, total = 0.0, 0, 0
+        all_preds, all_labels = [], [] # to compute metrics
+
+        for images, labels in train_loader:
+            images, labels = images.to(device), labels.to(device)
+
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backwards()
+
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), 
+                max_norm=1.0,  # Clip gradients to prevent exploding gradients
+                norm_type=2.0  # L2 norm
+            )
+
+            optimizer.step()
+            
+            running_loss += loss.item() * images.size(0)  # Sum up batch loss
+            _, predicted = outputs.max(1) # predicted class
+            total += labels.size(0)
+            correct += predicted.eq(labels).sum().item()
+
+            ### storing predicitions
+            all_preds.extend(predicted.cpu().numpy().tolist())
+            all_labels.extend(labels.cpu().numpy().tolist())
+
+        train_metrics = cnn_compute_metrics(all_preds, all_labels, num_classes=num_classes)
+
+        ### metric storage
+        wandb.log({
+            "epoch": epoch + 1,
+            f"train_loss": running_loss / len(train_loader.dataset),
+            f"train_accuracy": 100.0 * correct / total,
+            **{f"train_{k}": v for k, v in train_metrics.items()},
+        })
+        
+        ### printing
+        print(f"Epoch [{epoch+1}/{num_epochs}] - Train Loss: {running_loss / len(train_loader.dataset):.4f}, Accuracy: {100.0 * correct / total:.2f}%")
+        
+        ### Validation 
+        model.eval()
+        test_loss, test_correct, test_total = 0.0, 0, 0
+        
+        test_preds, test_labels = [], []
+
+        with torch.no_grad():
+            for test_images, test_targets in test_loader:
+                test_images, test_targets = test_images.to(device), test_targets.to(device)
+                test_outputs = model(test_images)
+                loss = criterion(test_outputs, test_targets)
+                test_loss += loss.item() * test_images.size(0)  # Accumulate batch loss
+
+                _, test_predicted = test_outputs.max(1)
+                test_total += test_targets.size(0)
+                test_correct += test_predicted.eq(test_targets).sum().item()
+
+                ### storing testidation preds and labels
+                test_preds.extend(test_predicted.cpu().numpy().tolist())
+                test_labels.extend(test_targets.cpu().numpy().tolist())
+
+        ### get metrics
+        test_loss /= len(test_loader.dataset)  # Normalize by dataset size
+        test_metrics = cnn_compute_metrics(test_preds, test_labels, num_classes=num_classes)
+
+        wandb.log({
+            "epoch": epoch + 1,
+            f"test_loss": test_loss,
+            f"test_accuracy": 100.0 * test_correct / test_total,
+            **{f"test_{k}": v for k, v in test_metrics.items()},
+        })
+
+        print(f"Validation - Loss: {test_loss:.4f}, Accuracy: {100.0 * test_correct / test_total:.2f}%")
+
+    return model, test_metrics
