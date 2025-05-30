@@ -7,6 +7,7 @@ import torch
 
 from datahandling import AlexNetDataHandler
 from models.MEGAlexNets import AlexNetDescend, AlexNetFinalOnly, AlexNetLongDescend, AlexNetSuddenDescend, AlexNetBigHead, AlexNetMediumHead, AlexNetSmallHead
+from models.MEGResNets import ResNet101SmallHead, ResNet101LongHead
 from experiment import cnn_sweep_train
 
 
@@ -30,18 +31,20 @@ def main():
         "AlexNetBigHead": AlexNetBigHead,
         "AlexNetMediumHead": AlexNetMediumHead,
         "AlexNetSmallHead": AlexNetSmallHead,
+        "ResNet101SmallHead": ResNet101SmallHead,
+        "ResNet101LongHead": ResNet101LongHead,
     }
 
     sweep_config = {
     "method": "bayes",
     "metric": {"name": "val_loss", "goal": "minimize"}, 
     "parameters": {
-        "learning_rate": {"values": [1e-3, 1e-4, 1e-5, 1e-6, 3e-4, 3e-5, 3e-6]}, #0.0001, 3e-4]},
+        "learning_rate": {"values": [1e-3, 1e-4, 1e-5, 3e-4]}, #0.0001, 3e-4]},
         "batch_size": {"values": [128, 64, 256]}, #128]},
         "optimizer": {"values": ["adamw_torch"]}, #, "sgd" "rmsprop", "adam"]},
         "weight_decay": {"values": [1e-4, 1e-5, 0.0, 1e-3]},
         "freeze_type": {"values": ["none", "feature"]},
-        "transforms": {"values": ["none", "time_color"]} # "none", "conv", "all"
+        "transforms": {"values": ["none",]} # "none", "time_color", "conv", "all",  
     },
     "early_terminate": { # stop training if its not working. 
         "type": "hyperband",

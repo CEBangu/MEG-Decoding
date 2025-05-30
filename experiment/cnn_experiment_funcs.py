@@ -217,7 +217,7 @@ def cnn_train_val_wandb(model, train_loader, val_loader, criterion, optimizer, n
             else:
                 epochs_no_improvement += 1
 
-            if epochs_no_improvement >= 10:  # Early stopping after 10 epochs without improvement
+            if epochs_no_improvement >= 6:  # Early stopping after 6 epochs without improvement
                 print("Stopping early - no improvement")
                 break  # Early stopping after 10 epochs without improvement
 
