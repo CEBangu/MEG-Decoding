@@ -10,6 +10,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
+import pickle
+from datetime import datetime
 
 from experiment import f1_metric, precision_metric, accuracy_metric, recall_metric
 
@@ -28,7 +30,7 @@ def get_optimizer(name, param_groups, weight_decay):
     """Dynamically select an optimizer just like Hugging Face Trainer."""
     Optim = { #get one of these depending on what the run config is
         "adam": torch.optim.Adam,
-        "adamw_torch": torch.optim.AdamW,
+        "adamw": torch.optim.AdamW,
         "sgd": torch.optim.SGD,
         "rmsprop": torch.optim.RMSprop,
     } [name.lower()] 
@@ -355,13 +357,15 @@ def cnn_sweep_train(model_type, model_class, device, k, num_classes, dataset, pr
 
 
 
-def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes, num_epochs, device='cuda'):
+def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes, num_epochs, project_name, device='cuda', save_results=True):
     """
-    This funciton handles the testing loop for the cnn model(s).
+    This function handles the testing loop for the cnn model(s).
     It trains the model, keeps tracks of the train and test results, and logs them to wandb
     """
+    
     test_metrics = {}
-
+    all_probs = []
+    all_targets = []
 
     for epoch in range(num_epochs):
         model.train()
@@ -369,12 +373,13 @@ def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes
         all_preds, all_labels = [], [] # to compute metrics
 
         for images, labels in train_loader:
-            images, labels = images.to(device), labels.to(device)
+            images, labels = images.to(device), labels.to(device).long()
 
             optimizer.zero_grad()
             outputs = model(images)
+            labels = labels.long()
             loss = criterion(outputs, labels)
-            loss.backwards()
+            loss.backward()
 
             torch.nn.utils.clip_grad_norm_(
                 model.parameters(), 
@@ -414,18 +419,24 @@ def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes
 
         with torch.no_grad():
             for test_images, test_targets in test_loader:
-                test_images, test_targets = test_images.to(device), test_targets.to(device)
+                test_images, test_targets = test_images.to(device), test_targets.to(device).long()
                 test_outputs = model(test_images)
+                test_targets = test_targets.long()
                 loss = criterion(test_outputs, test_targets)
                 test_loss += loss.item() * test_images.size(0)  # Accumulate batch loss
 
+                probs = torch.softmax(test_outputs, dim=1)
                 _, test_predicted = test_outputs.max(1)
                 test_total += test_targets.size(0)
                 test_correct += test_predicted.eq(test_targets).sum().item()
 
-                ### storing testidation preds and labels
-                test_preds.extend(test_predicted.cpu().numpy().tolist())
-                test_labels.extend(test_targets.cpu().numpy().tolist())
+                ### storing validation preds and labels
+                test_preds.extend(test_predicted.cpu().numpy())
+                test_labels.extend(test_targets.cpu().numpy())
+
+                if epoch == num_epochs - 1: 
+                    all_probs.extend(probs.cpu().numpy())
+                    all_targets.extend(test_targets.cpu().numpy())
 
         ### get metrics
         test_loss /= len(test_loader.dataset)  # Normalize by dataset size
@@ -438,6 +449,40 @@ def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes
             **{f"test_{k}": v for k, v in test_metrics.items()},
         })
 
-        print(f"Validation - Loss: {test_loss:.4f}, Accuracy: {100.0 * test_correct / test_total:.2f}%")
+        print(f"Test - Loss: {test_loss:.4f}, Accuracy: {100.0 * test_correct / test_total:.2f}%")
 
+    # Save results AFTER all epochs are complete
+    if save_results and len(all_targets) > 0:
+        # Convert to numpy arrays``
+        y_true = np.array(all_targets)
+        y_pred_proba = np.array(all_probs)
+        y_pred_classes = np.argmax(y_pred_proba, axis=1)
+        
+        results = {
+            'y_true': y_true,
+            'y_pred_classes': y_pred_classes,
+            'y_pred_proba': y_pred_proba,
+            'n_classes': num_classes,
+            'test_size': len(y_true),
+            'model_type': 'AlexNetBigHead',
+            'num_epochs': num_epochs,
+            'final_test_accuracy': 100.0 * test_correct / test_total,
+            'project_name': project_name
+        }
+
+        
+        filename = os.path.join(
+            "/pasteur/appa/homes/cbangu/MEG-Decoding/test_results",
+            f"{project_name}_{datetime.now():%Y%m%d_%H%M%S}_test_results.pkl"
+        )
+
+        with open(filename, "wb") as f:
+            pickle.dump(results, f)
+
+            
+        print(f"Results saved to: {filename}")
+
+    wandb.run.summary['test_probs'] = all_probs
+    wandb.run.summary['test_labels'] = all_targets
+    
     return model, test_metrics
