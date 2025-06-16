@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import transforms
 from collections import Counter
 from argparse import ArgumentParser
+import torch
 
 
 
@@ -34,7 +35,7 @@ def train_set_collate_fn(batch):
     images = [train_transforms(img) for img in images]  # Apply train transforms
     return torch.stack(images), torch.tensor(labels)
 
-import torch
+
 
 def get_label_stats(df, device=None):
     counts = df.iloc[:, 1].value_counts().sort_index()
