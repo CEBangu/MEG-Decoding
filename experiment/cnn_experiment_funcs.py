@@ -472,7 +472,7 @@ def cnn_test(model, train_loader, test_loader, optimizer, criterion, num_classes
 
         
         filename = os.path.join(
-            "/pasteur/appa/homes/cbangu/MEG-Decoding/test_results",
+            "/pasteur/appa/homes/cbangu/MEG-Decoding/test_results_final",
             f"{project_name}_{datetime.now():%Y%m%d_%H%M%S}_test_results.pkl"
         )
 

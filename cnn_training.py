@@ -41,7 +41,7 @@ def main():
     "parameters": {
         "learning_rate": {"values": [1e-3, 1e-4, 1e-5, 3e-4]}, #0.0001, 3e-4]},
         "batch_size": {"values": [128, 64, 256]}, #128]},
-        "optimizer": {"values": ["adamw_torch"]}, #, "sgd" "rmsprop", "adam"]},
+        "optimizer": {"values": ["adamw"]}, #, "sgd" "rmsprop", "adam"]},
         "weight_decay": {"values": [1e-4, 1e-5, 0.0, 1e-3]},
         "freeze_type": {"values": ["none", "feature"]},
         "transforms": {"values": ["none",]} # "none", "time_color", "conv", "all",  
