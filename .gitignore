@@ -51,3 +51,4 @@ test.ipynb
 /.vscode
 config_generator_v2.ipynb
 *.tar
+!requirements_*.txt
