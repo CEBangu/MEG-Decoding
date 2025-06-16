@@ -26,6 +26,8 @@ train_transforms = transforms.Compose([
     transforms.ColorJitter(brightness=0.05, contrast=0.05, saturation=0.05, hue=0.05),
 ])
 
+device = "cuda"
+
 def train_set_collate_fn(batch):
     """
     This function handles the data augmentation for the train set (because the dataset class is already created, so we have to apply
@@ -34,6 +36,8 @@ def train_set_collate_fn(batch):
     images, labels = zip(*batch)  # Unpack batch
     images = [train_transforms(img) for img in images]  # Apply train transforms
     return torch.stack(images), torch.tensor(labels)
+
+
 
 
 
@@ -53,6 +57,7 @@ def get_label_stats(df, device=None):
     freqs = counts.values.astype(float)
     inv = 1.0 / torch.tensor(freqs)
     weights = inv / inv.sum()
+    weights = weights.to(dtype=torch.float32)
     
     # 5) move to device if requested
     if device is not None:
@@ -64,99 +69,78 @@ def get_label_stats(df, device=None):
 
 def main():
 
-    parser = ArgumentParser(description="This script does the testing for the models")
-
-    parser.add_argument('--model_type', type=str, required=True, help="The model architecture you want to train")
-    parser.add_argument('--num_classes', type=int, default=3, help="how many classes")
-    parser.add_argument('--project_name', type=str, default=None, help="project name")
-    parser.add_argument('--labels', type=str, required=True, help='path to label csv')
-    parser.add_argument('--batch_size', type=int, required=True, help='batch size in int')
-    parser.add_argument('--learning_rate', type=float, required=True, help='learning rate in float')
-    parser.add_argument('--optimizer', type=str, required=True, help='optimizer to use')
-    parser.add_argument('--transforms', type=str, require=True, help='type of transforms to use')
+    parser = ArgumentParser(description="CNN test-loop (9 seeds)")
+    parser.add_argument("--model_type",   required=True)
+    parser.add_argument("--num_classes",  type=int, default=3)
+    parser.add_argument("--project_name", required=True)
+    parser.add_argument("--train_labels", required=True)
+    parser.add_argument("--test_labels",  required=True)
+    parser.add_argument("--batch_size",   type=int,  required=True)
+    parser.add_argument("--learning_rate",type=float,required=True)
+    parser.add_argument("--freeze",       required=True)
+    parser.add_argument("--weight_decay", type=float, default=0.0)
+    parser.add_argument("--optimizer",    required=True)
+    parser.add_argument("--transforms",   required=True)
+    parser.add_argument("--seed", type=int, default=1,
+                        help="Random seed passed by SLURM array task")
 
     args = parser.parse_args()
 
-    model_dict = {
-        "AlexNetFinalOnly": AlexNetFinalOnly,
-        "AlexNetDescend": AlexNetDescend,
-        "AlexNetLongDescend" : AlexNetLongDescend,
-        "AlexNetSuddenDescend": AlexNetSuddenDescend,
-        "AlexNetBigHead": AlexNetBigHead,
-        "AlexNetMediumHead": AlexNetMediumHead,
-        "AlexNetSmallHead": AlexNetSmallHead,
-    }    
+
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
 
 
-    ####
-    # logging 
-    ####
-    project_name = args.project_name
-
-    wandb_dir = os.getenv("WANDB_DIR")
-
-    run = wandb.init(project=project_name,
-                dir=wandb_dir,
-    )
-
-    # train set
     train_set = AlexNetDataHandler(csv_file=args.train_labels)
-    collate = True if args.transforms == "time_color" else None
+    test_set  = AlexNetDataHandler(csv_file=args.test_labels)
+    collate   = True if args.transforms == "time" else None
+
     train_loader = DataLoader(
-        train_set,
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=6,
-        pin_memory=True,
+        train_set, batch_size=args.batch_size, shuffle=True,
+        num_workers=6, pin_memory=True,
         collate_fn=train_set_collate_fn if collate else None
     )
+    test_loader  = DataLoader(test_set,
+                              batch_size=args.batch_size,
+                              shuffle=False)
 
-    #test
-    test_set = AlexNetDataHandler(csv_file=args.test_labels)
-    test_loader = DataLoader(
-        test_set,
-        batch_size=args.batch_size,
-        shuffle=False
+
+    _, _, _, class_weights = get_label_stats(train_set.data, device)
+    criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.10)
+
+
+    run = wandb.init(
+        project=args.project_name,
+        name=f"{args.project_name}_seed{args.seed}",   # readable but optional
+        dir=os.getenv("WANDB_DIR"),
     )
-
-    #dataset stats
-    # After you split your DataFrame into df_train, df_val:
-    print("Train stats:")
-    labels_train, train_counts, chance_train, class_weights = get_label_stats(train_set.data, device)
-    print("Test stats:")
-    labels_val,   val_counts,   chance_val,   _             = get_label_stats(test_set.data)
+    wandb.config.update(vars(args))
 
 
+    model_cls = {
+        "AlexNetFinalOnly":  AlexNetFinalOnly,
+        "AlexNetDescend":    AlexNetDescend,
+        "AlexNetLongDescend":AlexNetLongDescend,
+        "AlexNetSuddenDescend":AlexNetSuddenDescend,
+        "AlexNetBigHead":    AlexNetBigHead,
+        "AlexNetMediumHead": AlexNetMediumHead,
+        "AlexNetSmallHead":  AlexNetSmallHead,
+    }[args.model_type]
 
+    model = model_cls(num_classes=args.num_classes).to(device)
+    model.freeze_type(freeze_type=args.freeze)
 
-    criterion = nn.CrossEntropyLoss(weight=class_weights,
-                                    label_smoothing=0.15)
+    if args.freeze == "feature":
+        param_groups = {"params": model.classifier.parameters(),
+                        "lr": args.learning_rate * 20}
+    else:
+        param_groups = [
+            {"params": model.features.parameters(), "lr": args.learning_rate},
+            {"params": model.classifier.parameters(), "lr": args.learning_rate * 20}
+        ]
 
-    # model setup
-    model_class=args.model_class
-    num_classes=args.num_classes
-    
-    device = "cuda"
-    num_epochs=60
-    model_class = model_dict[args.model_type]
-    model = model_class(num_classes=num_classes).to(device=device)
-    model.freeze_type(freeze_type=args.freeze_type)
-    
-
-    if args.freeze_type == "feature": 
-        pg = {"params": model.classifier.parameters(), "lr": args.learning_rate * 20}
-    else: 
-        pg = [{"params": model.features.parameters(), "lr": args.learning_rate},
-                {"params": model.classifier.parameters(), "lr": args.learning_rate * 20}]
-
-
-    optimizer = get_optimizer(
-        name=args.optimizer, 
-        param_groups=pg, 
-        weight_decay=args.weight_decay
-    )
-
-    criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=0.15)
+    optimizer = get_optimizer(args.optimizer, param_groups,
+                              weight_decay=args.weight_decay)
 
 
     model, metrics = cnn_test(
@@ -165,11 +149,15 @@ def main():
         test_loader=test_loader,
         optimizer=optimizer,
         criterion=criterion,
-        num_classes=num_classes,
-        num_epochs=num_epochs,
-        device='cuda'
+        num_classes=args.num_classes,
+        num_epochs=60,
+        project_name=args.project_name,   # will be used in timestamped pickle
+        device=device,
+        save_results=True
     )
 
+    print(f"[seed {args.seed}] accuracy = {metrics['accuracy']:.3f}")
+    wandb.finish()
 
-    print(metrics)
-    torch.save(model.state_dict(), f"{project_name}.pt")
+if __name__ == "__main__":
+    main()
