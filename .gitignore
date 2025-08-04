@@ -52,3 +52,11 @@ test.ipynb
 config_generator_v2.ipynb
 *.tar
 !requirements_*.txt
+/coreg-figures
+/covert-labels-test
+/overt-label-test
+/results-plots
+/sample-scalograms
+/top-sensors
+/trans
+/hyperparam-results
