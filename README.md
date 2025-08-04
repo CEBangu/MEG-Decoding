@@ -1,4 +1,4 @@
-# Decoding Speech from Magnetoencephelography Data
+# Decoding Speech from Magnetoencephalography Data
 
 ## Summary
 This repository contains code relevant to my Master’s thesis, conducted at the Neurospeech lab at the Pasteur Institute de l’Audition, and supervised by Dr. Anne-Lise Giraud.
