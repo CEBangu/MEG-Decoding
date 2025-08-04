@@ -4,7 +4,7 @@ import numpy as np
 from pymatreader import read_mat
 from sklearn.neighbors import LocalOutlierFactor
 
-#from Soufiane
+# This code was written by PhD student Soufiane Jhilal, who co-supervised the project
 
 class Epoching:
     """ Functions used in epoching script"""
